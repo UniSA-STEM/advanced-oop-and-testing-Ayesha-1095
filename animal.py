@@ -335,56 +335,297 @@ class Mammal(Animal):
 
 class Reptile(Animal):
     """
-    Represents reptiles in the zoo. Reptiles are cold-blooded and
-    usually have scales. This class adds skin type, blood type,
-    and whether the reptile is venomous or not.
-    """
-    def __init__(self, name, species, age, dietary_needs, skin_type, blood_type, is_venomous):
-        super().__init__(name, species, age, dietary_needs)
-        self._skin_type = skin_type
-        self._blood_type = blood_type
-        self._is_venomous = False
+    Represents reptiles in the zoo. Reptiles are cold-blooded and usually
+    have scales. This class extends Animal with extra attributes like
+    sound, skin type, blood type, and whether the reptile is venomous.
 
-    def eat(self):
-        """Shows how a reptile eats."""
-        pass
-    def sleep(self):
-        """Shows how a reptile sleeps."""
-        pass
-    def make_sound(self):
-        """Shows the sound a reptile makes."""
-        pass
-    def __str__(self):
-        """Returns details about the reptile."""
-        pass
-    def __eq__(self, other):
-        """Compares two reptiles based on their details."""
-        pass
+    Attributes:
+        sound (str): Sound made by the reptile.
+        skin_type (str): Description of the reptile's skin.
+        blood_type (str): Blood temperature type (e.g., cold-blooded).
+        is_venomous (bool): Indicates if the reptile is venomous.
+    """
+
+    def __init__(self, name: str, species: str, age: int, dietary_needs: str,
+                 sound: str, skin_type: str, blood_type: str, is_venomous: bool) -> None:
+        """
+        Initialize a Reptile object.
+
+        Args:
+            name (str): The reptile's name.
+            species (str): Type or species of the reptile.
+            age (int): Age of the reptile.
+            dietary_needs (str): Diet type of the reptile.
+            sound (str): Sound made by the reptile.
+            skin_type (str): Description of the reptile's skin.
+            blood_type (str): Blood temperature type (e.g., cold-blooded).
+            is_venomous (bool): Whether the reptile is venomous.
+        """
+        super().__init__(name, species, age, dietary_needs)
+        self._sound: str = sound
+        self._skin_type: str = skin_type
+        self._blood_type: str = blood_type
+        self._is_venomous: bool = is_venomous
+
+    # =================================== Getters ===========================================================================
+    def get_sound(self) -> str:
+        """Return the sound made by the reptile."""
+        return self._sound
+
+    def get_skin_type(self) -> str:
+        """Return the skin type of the reptile."""
+        return self._skin_type
+
+    def get_blood_type(self) -> str:
+        """Return the reptile blood type."""
+        return self._blood_type
+
+    def get_is_venomous(self) -> bool:
+        """Return whether the reptile is venomous."""
+        return self._is_venomous
+
+    # ==================================== Setters =========================================================================
+    def set_sound(self, sound: str) -> None:
+        """
+        Set the sound made by the reptile.
+
+        Raises:
+            TypeError: If the sound is not a string.
+            ValueError: If the sound is an empty string.
+        """
+        if not isinstance(sound, str):
+            raise TypeError('Sound must be a string.')
+        self._sound = sound
+        if sound.strip() == '':
+            raise ValueError('Sound cannot be empty.')
+        self._sound = sound
+
+    def set_skin_type(self, skin_type: str) -> None:
+        """
+        Set the skin type for the reptile.
+
+        Raises:
+            TypeError: If the skin type is not a string.
+            ValueError: If the skin type is an empty string.
+        """
+        if not isinstance(skin_type, str):
+            raise TypeError('Skin type must be a string.')
+        self._skin_type = skin_type
+        if skin_type.strip() == '':
+            raise ValueError('Skin type cannot be empty.')
+        self._skin_type = skin_type
+
+    def set_is_venomous(self, is_venomous: bool) -> None:
+        """
+        Set the is_venomous flag for the reptile.
+
+        Raises:
+            TypeError: If is_venomous is not a boolean.
+        """
+        if not isinstance(is_venomous, bool):
+            raise TypeError('Is Venomous must be a boolean (True/False).')
+        self._is_venomous = is_venomous
+
+    # =================================== Properties ==============================================
+    sound = property(get_sound, set_sound)
+    skin_type = property(get_skin_type, set_skin_type)
+    blood_type = property(get_blood_type)
+    is_venomous = property(get_is_venomous, set_is_venomous)
+
+    # =================================== Methods ==================================================
+    def eat(self) -> str:
+        """Return a message describing how the reptile eats."""
+        return f'{self.name} the {self.species} is eating {self.dietary_needs}.'
+
+    def sleep(self) -> str:
+        """Return a message describing that reptile is sleeping."""
+        return f'{self.name} the {self.species} is sleeping.'
+
+    def make_sound(self) -> str:
+        """Return a message describing the sound the reptile makes.."""
+        return f'{self.name} {self.sound}!'
+
+    # ==================================== String Method ============================================
+    def __str__(self) -> str:
+        """
+        Return a formatted string with all reptile details.
+
+        The output includes general animal information from the base class
+        as well as reptile-specific attributes such as skin type, blood type,
+        and venom status.
+
+        Returns:
+            str: A formatted string containing the reptile's complete details.
+        """
+        return (super().__str__() +
+                f'Sound: {self.sound}\n'
+                f'Skin type: {self.skin_type}\n'
+                f'Blood type: {self.blood_type}\n'
+                f'Is Venomous: {self.is_venomous}\n')
+
+    # ====================================== Equal Method =============================================
+    def __eq__(self, other) -> bool:
+        """
+        Compare two reptiles based on both their Animal and Reptile attributes.
+
+        Args:
+            other (Reptile): Another reptile to compare.
+
+        Returns:
+            bool: True if both reptiles share the same attributes.
+        """
+        if not isinstance(other, Reptile):
+            return False
+        return (super().__eq__(other) and
+                self.sound == other.sound and
+                self.skin_type == other.skin_type and
+                self.blood_type == other.blood_type and
+                self.is_venomous == other.is_venomous)
+
+
 class Bird(Animal):
     """
     Represents birds in the zoo. Birds have feathers and most can fly.
-    This class adds feather type, blood type, and whether the bird can fly.
+    This class extends Animal with extra attributes like sound, feather type,
+    blood type, and the ability to fly.
+
+    Attributes:
+        sound (str): Sound made by the bird.
+        feather_type (str): Description of the bird's feathers.
+        blood_type (str): Blood temperature type (e.g., warm-blooded).
+        can_fly (bool): Indicates if the bird can fly.
     """
 
-    def __init__(self, name, species, age, dietary_needs, feather_type, blood_type, can_fly):
+    def __init__(self, name: str, species: str, age: int, dietary_needs: str,
+                 sound: str, feather_type: str, blood_type: str, can_fly: bool) -> None:
+        """
+        Initialize a Bird object.
+
+        Args:
+            name (str): The bird's name.
+            species (str): Type or species of the bird.
+            age (int): Age of the bird.
+            dietary_needs (str): Diet type of the bird.
+            sound (str): Sound made by the bird.
+            feather_type (str): Description of the bird's feathers.
+            blood_type (str): Blood temperature type (e.g., warm-blooded).
+            can_fly (bool): Indicates if the bird can fly.
+        """
         super().__init__(name, species, age, dietary_needs)
+        self._sound: str = sound
+        self._feather_type: str = feather_type
+        self._blood_type: str = blood_type
+        self._can_fly: bool = can_fly
+
+    # ===================================== Getters =========================================================
+    def get_sound(self) -> str:
+        """Return the sound made by the bird."""
+        return self._sound
+
+    def get_feather_type(self) -> str:
+        """Return the feather type of the bird."""
+        return self._feather_type
+
+    def get_blood_type(self) -> str:
+        """Return the bird blood type."""
+        return self._blood_type
+
+    def get_can_fly(self) -> bool:
+        """Return the bird can_fly."""
+        return self._can_fly
+
+    # ===================================== Setters ============================================================
+    def set_sound(self, sound: str) -> None:
+        """
+        Set the sound made by the bird.
+
+        Raises:
+            TypeError: If the sound is not a string.
+            ValueError: If the sound is an empty string.
+        """
+        if not isinstance(sound, str):
+            raise TypeError('Sound must be a string.')
+        self._sound = sound
+        if sound.strip() == '':
+            raise ValueError('Sound cannot be empty.')
+        self._sound = sound
+
+    def set_feather_type(self, feather_type: str) -> None:
+        """
+        Set the feather type of the bird.
+
+        Raises:
+            TypeError: If the feather type is not a string.
+            ValueError: If the feather type is an empty string.
+        """
+        if not isinstance(feather_type, str):
+            raise TypeError('Feather type must be a string.')
         self._feather_type = feather_type
-        self._blood_type = blood_type
-        self._can_fly = False
-    def eat(self):
-        """Shows how a bird eats."""
-        pass
-    def sleep(self):
-        """Shows how a bird sleeps."""
-        pass
-    def make_sound(self):
-        """Shows the sound a bird makes."""
-        pass
-    def __str__(self):
-        """Returns details about the bird."""
-        pass
-    def __eq__(self, other):
-        """Compares two bird based on their details."""
-        pass
+        if feather_type.strip() == '':
+            raise ValueError('Feather type cannot be empty.')
+        self._feather_type = feather_type
 
+    def set_can_fly(self, can_fly: bool) -> None:
+        """
+        Set the can_fly flag for the bird.
 
+        Raises:
+            TypeError: If can_fly is not a boolean.
+        """
+        if not isinstance(can_fly, bool):
+            raise TypeError('Can fly must be a boolean (True/False).')
+        self._can_fly = can_fly
+
+    # ================================== Properties =====================================================
+    sound = property(get_sound, set_sound)
+    feather_type = property(get_feather_type, set_feather_type)
+    blood_type = property(get_blood_type)
+    can_fly = property(get_can_fly, set_can_fly)
+
+    # ================================== Methods =========================================================
+    def eat(self) -> str:
+        """Return a message describing how the bird eats."""
+        return f'{self.name} the {self.species} is eating {self.dietary_needs}.'
+
+    def sleep(self) -> str:
+        """Return a message describing how the bird sleeps."""
+        return f'{self.name} the {self.species} is sleeping.'
+
+    def make_sound(self) -> str:
+        """Return a message describing how the bird makes sounds."""
+        return f'{self.name} {self.sound}!'
+
+    def __str__(self) -> str:
+        """
+        Return a formatted string with all bird details.
+
+        The output includes general animal information from the base class
+        as well as bird-specific attributes such as feather type, blood type,
+        and if the bird can fly.
+
+        Returns:
+            str: A formatted string containing the bird's complete details.
+        """
+        return (super().__str__() +
+                f'Sound: {self.sound}\n'
+                f'Feather type: {self.feather_type}\n'
+                f'Blood type: {self.blood_type}\n'
+                f'Can Fly: {self.can_fly}\n')
+
+    def __eq__(self, other) -> bool:
+        """
+        Compare two birds based on both their Animal and Bird attributes.
+
+        Args:
+            other (Bird): Another bird to compare.
+
+        Returns:
+            bool: True if both birds share the same attributes.
+        """
+        if not isinstance(other, Bird):
+            return False
+        return (super().__eq__(other) and
+                self.sound == other.sound and
+                self.feather_type == other.feather_type and
+                self.blood_type == other.blood_type and
+                self.can_fly == other.can_fly)
