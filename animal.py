@@ -17,30 +17,35 @@ class Animal(ABC):
     and defines common behaviours that all animals share.
 
      Attributes:
-        name (str): The animal's name.
-        species (str): The species or type of the animal.
-        age (int): The age of the animal.
-        dietary_needs (str): Description of the animal's diet.
+        _name (str): The animal's name.
+        _species (str): The species or type of the animal.
+        _age (int): The age of the animal.
+        _dietary_needs (str): Description of the animal's diet.
+        _environment (str): The type of environment suitable for the animals  (e.g., aquatic, savannah).
+        __health_records (list): List storing the animal's health records privately.
     """
 # ============================ Constructor =======================================================
 
-    def __init__(self, name: str, species: str, age: int, dietary_needs: str) -> None:
+    def __init__(self, name: str, species: str, age: int, dietary_needs: str, environment: str) -> None:
         """
         Initialize a new Animal instance.
 
         Args:
             name (str): The animal's name.
             species (str): The type or category of the animal.
-            age (int): The age of the animal in years.
+            age (int): The age of the animal in days.
             dietary_needs (str): The animal's dietary type (e.g., Carnivore, Herbivore).
         """
+        # Protected attributes are used to allow access by subclasses (e.g., Mammal).
         self._name: str = name
         self._species: str = species
         self._age: int = age
         self._dietary_needs: str = dietary_needs
+        self._environment: str = environment
         self.__health_records: list = []    # Stores animal’s health records privately
 
 # ============================ Getters ==========================================================
+    # Return the current value of each attribute
     def get_name(self) -> str:
         """Return the animal's name."""
         return self._name
@@ -57,7 +62,12 @@ class Animal(ABC):
         """Return the animal's dietary needs."""
         return self._dietary_needs
 
+    def get_environment(self) -> str:
+        """Return the animal's environment."""
+        return self._environment
+
 # ============================= Setters =========================================================
+    # Validate and set new values for attributes
     def set_name(self, new_name: str) -> None:
         """
         Set a new name for the animal.
@@ -68,8 +78,7 @@ class Animal(ABC):
         """
         if not isinstance (new_name, str):
             raise TypeError('Name must be a string.')
-        self._name = new_name
-        if new_name.strip() == "":
+        if new_name.strip() == '':
             raise ValueError('Name cannot be empty.')
         self._name = new_name
 
@@ -83,7 +92,6 @@ class Animal(ABC):
         """
         if not isinstance (new_species, str):
             raise TypeError('Species must be a string.')
-        self._species = new_species
         if new_species.strip() == '':
             raise ValueError('Species cannot be empty.')
         self._species = new_species
@@ -112,17 +120,24 @@ class Animal(ABC):
         """
         if not isinstance (new_diet, str):
             raise TypeError('Dietary needs must be a string.')
-        self._dietary_needs = new_diet
         if new_diet.strip() == '':
             raise ValueError('Dietary needs cannot be empty.')
         self._dietary_needs = new_diet
 
-# ============================ Properties ======================================================
+    def set_environment(self, new_env: str) -> None:
+        if not isinstance(new_env, str):
+            raise TypeError('Environment must be a string.')
+        if new_env.strip() == '':
+            raise ValueError('Environment cannot be empty.')
+        self._environment = new_env
 
+# ============================ Properties ======================================================
+    # Create Python properties for attribute access
     name = property(get_name, set_name)
     species = property(get_species, set_species)
     age = property(get_age, set_age)
     dietary_needs = property(get_dietary_needs, set_dietary_needs)
+    environment = property(get_environment, set_environment)
 
 # ============================ Abstract Methods ==========================================================
     @abstractmethod
@@ -168,6 +183,7 @@ class Animal(ABC):
             print(msg)
             return msg
         else:
+            # Iterates through the records and prints them out
             for record in self.__health_records:
                 print(record)
             return list(self.__health_records)
@@ -185,7 +201,8 @@ class Animal(ABC):
         return (f'Name: {self.name}\n'
                 f'Species: {self.species}\n'
                 f'Age: {self.age}\n'
-                f'Dietary needs: {self.dietary_needs}\n')
+                f'Dietary needs: {self.dietary_needs}\n'
+                f'Environment: {self.environment}\n')
 
 # ================================ Equal Method ===================================================
 
@@ -204,7 +221,8 @@ class Animal(ABC):
         return (self.name == other.name and
                 self.species == other.species and
                 self.age == other.age and
-                self.dietary_needs == other.dietary_needs)
+                self.dietary_needs == other.dietary_needs and
+                self.environment == other.environment)
 
 class Mammal(Animal):
     """
@@ -218,7 +236,7 @@ class Mammal(Animal):
         blood_type (str): Type of blood temperature regulation (e.g., warm-blooded).
     """
 
-    def __init__(self, name: str, species: str, age: int, dietary_needs: str,
+    def __init__(self, name: str, species: str, age: int, dietary_needs: str, environment: str,
                  sound: str, hair_type: str, blood_type: str) -> None:
         """
         Initialize a Mammal object.
@@ -232,7 +250,7 @@ class Mammal(Animal):
             hair_type (str): Description of hair or fur type.
             blood_type (str): Type of blood temperature regulation (e.g., warm-blooded).
         """
-        super().__init__(name, species, age, dietary_needs)
+        super().__init__(name, species, age, dietary_needs, environment)
         self._sound: str = sound
         self._hair_type: str = hair_type
         self._blood_type: str = blood_type
@@ -261,7 +279,6 @@ class Mammal(Animal):
         """
         if not isinstance (sound, str):
             raise TypeError('Sound must be a string.')
-        self._sound = sound
         if sound.strip() == '':
             raise ValueError('Sound cannot be empty.')
         self._sound = sound
@@ -276,17 +293,18 @@ class Mammal(Animal):
         """
         if not isinstance (hair_type, str):
             raise TypeError('Hair type must be a string.')
-        self._hair_type = hair_type
         if hair_type.strip() == '':
             raise ValueError('Hair type cannot be empty.')
         self._hair_type = hair_type
 
+    # Note: blood_type does not have a setter, implying it is fixed after instantiation.
 # =================================== Properties ======================================================
     sound = property(get_sound, set_sound)
     hair_type = property(get_hair_type, set_hair_type)
     blood_type = property(get_blood_type)
 
 # =================================== Methods =========================================================
+    # Implementation of abstract methods
     def eat(self) -> str:
         """Return a message describing how the mammal eats."""
         return f'{self.name} the {self.species} is eating {self.dietary_needs}.'
@@ -346,7 +364,7 @@ class Reptile(Animal):
         is_venomous (bool): Indicates if the reptile is venomous.
     """
 
-    def __init__(self, name: str, species: str, age: int, dietary_needs: str,
+    def __init__(self, name: str, species: str, age: int, dietary_needs: str, environment: str,
                  sound: str, skin_type: str, blood_type: str, is_venomous: bool) -> None:
         """
         Initialize a Reptile object.
@@ -361,7 +379,7 @@ class Reptile(Animal):
             blood_type (str): Blood temperature type (e.g., cold-blooded).
             is_venomous (bool): Whether the reptile is venomous.
         """
-        super().__init__(name, species, age, dietary_needs)
+        super().__init__(name, species, age, dietary_needs, environment)
         self._sound: str = sound
         self._skin_type: str = skin_type
         self._blood_type: str = blood_type
@@ -395,7 +413,6 @@ class Reptile(Animal):
         """
         if not isinstance(sound, str):
             raise TypeError('Sound must be a string.')
-        self._sound = sound
         if sound.strip() == '':
             raise ValueError('Sound cannot be empty.')
         self._sound = sound
@@ -410,7 +427,6 @@ class Reptile(Animal):
         """
         if not isinstance(skin_type, str):
             raise TypeError('Skin type must be a string.')
-        self._skin_type = skin_type
         if skin_type.strip() == '':
             raise ValueError('Skin type cannot be empty.')
         self._skin_type = skin_type
@@ -433,6 +449,7 @@ class Reptile(Animal):
     is_venomous = property(get_is_venomous, set_is_venomous)
 
     # =================================== Methods ==================================================
+    # Implementation of abstract methods
     def eat(self) -> str:
         """Return a message describing how the reptile eats."""
         return f'{self.name} the {self.species} is eating {self.dietary_needs}.'
@@ -496,7 +513,7 @@ class Bird(Animal):
         can_fly (bool): Indicates if the bird can fly.
     """
 
-    def __init__(self, name: str, species: str, age: int, dietary_needs: str,
+    def __init__(self, name: str, species: str, age: int, dietary_needs: str, environment: str,
                  sound: str, feather_type: str, blood_type: str, can_fly: bool) -> None:
         """
         Initialize a Bird object.
@@ -511,7 +528,7 @@ class Bird(Animal):
             blood_type (str): Blood temperature type (e.g., warm-blooded).
             can_fly (bool): Indicates if the bird can fly.
         """
-        super().__init__(name, species, age, dietary_needs)
+        super().__init__(name, species, age, dietary_needs, environment)
         self._sound: str = sound
         self._feather_type: str = feather_type
         self._blood_type: str = blood_type
@@ -583,6 +600,7 @@ class Bird(Animal):
     can_fly = property(get_can_fly, set_can_fly)
 
     # ================================== Methods =========================================================
+    # Implementation of abstract methods
     def eat(self) -> str:
         """Return a message describing how the bird eats."""
         return f'{self.name} the {self.species} is eating {self.dietary_needs}.'
