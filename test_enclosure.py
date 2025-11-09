@@ -37,6 +37,11 @@ def test_init(mammal_enclosure):
     assert mammal_enclosure.cleanliness_level == 80
     assert mammal_enclosure.animals == []
 
+def test_init_default_cleanliness():
+    """Test that default cleanliness level is 100%."""
+    enclosure = Enclosure('Medium', 'Jungle', Mammal)
+    assert enclosure.cleanliness_level == 100
+
 # ============================ Setters (Valid Cases) ====================================================
 # Test that setting valid attributes works as expected
 def test_set_valid_values(mammal_enclosure):
@@ -45,6 +50,8 @@ def test_set_valid_values(mammal_enclosure):
     assert mammal_enclosure.size == 'Small'
     mammal_enclosure.environmental_type = 'Jungle'
     assert mammal_enclosure.environmental_type == 'Jungle'
+    mammal_enclosure.animal_type = Mammal
+    assert mammal_enclosure.animal_type == Mammal
     mammal_enclosure.cleanliness_level = 96.0
     assert mammal_enclosure.cleanliness_level == 96.0
 
@@ -57,6 +64,8 @@ def test_set_invalid_values(mammal_enclosure):
         mammal_enclosure.size = 123
     with pytest.raises(TypeError):
         mammal_enclosure.environmental_type = 125
+    with pytest.raises(TypeError):
+        mammal_enclosure.animal_type = 'Not a Class'
     with pytest.raises(TypeError):
         mammal_enclosure.cleanliness_level = 'Fully Clean'
 
@@ -103,6 +112,16 @@ def test_add_duplicate_animal(mammal_enclosure, sample_mammal):
         # Add duplicate
         mammal_enclosure.add_animal(sample_mammal)
 
+def test_add_animal_not_animal_object(mammal_enclosure):
+    """Test that adding a non-Animal object raises TypeError."""
+    with pytest.raises(TypeError):
+        mammal_enclosure.add_animal('not an animal')
+    with pytest.raises(TypeError):
+        mammal_enclosure.add_animal(123)
+    with pytest.raises(TypeError):
+        mammal_enclosure.add_animal(None)
+
+
 # ============================ Remove Animal ========================================================
 # Test removing animals from the enclosure and error handling
 def test_remove_animal_valid(mammal_enclosure, sample_mammal):
@@ -137,7 +156,57 @@ def test_clean_enclosure_already_clean(mammal_enclosure):
     mammal_enclosure.cleanliness_level = 100
     result = mammal_enclosure.clean_enclosure()
     assert mammal_enclosure.cleanliness_level == 100
-    assert 'The enclosure is already 100% cleaned.' in result
+    assert 'The enclosure is already 100% clean.' in result
+
+# ============================ Degrade Cleanliness ========================================================
+# Test the degrade_cleanliness method including normal cases and edge cases
+
+def test_degrade_cleanliness(mammal_enclosure):
+    """Test that degrading cleanliness reduces the level correctly."""
+    mammal_enclosure.cleanliness_level = 100
+    result = mammal_enclosure.degrade_cleanliness(15)
+    assert mammal_enclosure.cleanliness_level == 85
+    assert 'Cleanliness degraded from 100% to 85%' in result
+
+def test_degrade_cleanliness_below_zero(mammal_enclosure):
+    """Test that cleanliness cannot go below 0%."""
+    mammal_enclosure.cleanliness_level = 10
+    result = mammal_enclosure.degrade_cleanliness(25)
+    assert mammal_enclosure.cleanliness_level == 0
+    assert 'Cleanliness degraded from 10% to 0%' in result
+
+def test_degrade_cleanliness_already_at_zero(mammal_enclosure):
+    """Test degrading when cleanliness is already at 0%."""
+    mammal_enclosure.cleanliness_level = 0
+    result = mammal_enclosure.degrade_cleanliness(10)
+    assert mammal_enclosure.cleanliness_level == 0
+    assert 'already at 0% cleanliness' in result
+
+def test_degrade_cleanliness_invalid_type(mammal_enclosure):
+    """Test that invalid type raises TypeError."""
+    with pytest.raises(TypeError):
+        mammal_enclosure.degrade_cleanliness('lots')
+
+def test_degrade_cleanliness_invalid_value(mammal_enclosure):
+    """Test that invalid value raises ValueError."""
+    with pytest.raises(ValueError):
+        mammal_enclosure.degrade_cleanliness(-10)
+    with pytest.raises(ValueError):
+        mammal_enclosure.degrade_cleanliness(150)
+
+def test_degrade_cleanliness_default_parameter(mammal_enclosure):
+    """Test degradation with default amount (10%)."""
+    mammal_enclosure.cleanliness_level = 50
+    result = mammal_enclosure.degrade_cleanliness()
+    assert mammal_enclosure.cleanliness_level == 40
+    assert 'Cleanliness degraded from 50% to 40%' in result
+
+def test_degrade_cleanliness_exact_zero(mammal_enclosure):
+    """Test degradation that reaches exactly 0%."""
+    mammal_enclosure.cleanliness_level = 20
+    result = mammal_enclosure.degrade_cleanliness(20)
+    assert mammal_enclosure.cleanliness_level == 0
+    assert 'Cleanliness degraded from 20% to 0%' in result
 
 # ============================ Report Status ========================================================
 # Test that report_status returns accurate details of the enclosure
