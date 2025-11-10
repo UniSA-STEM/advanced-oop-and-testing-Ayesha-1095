@@ -10,6 +10,9 @@ This is my own work as defined by the University's Academic Integrity Policy.
 """
 from abc import ABC, abstractmethod
 
+from health_record import HealthRecord
+
+
 class Animal(ABC):
     """
     Abstract base class representing a general animal in the zoo.
@@ -33,16 +36,19 @@ class Animal(ABC):
         Args:
             name (str): The animal's name.
             species (str): The type or category of the animal.
-            age (int): The age of the animal in days.
+            age (int): The age of the animal.
             dietary_needs (str): The animal's dietary type (e.g., Carnivore, Herbivore).
+            environment (str): The type of environment suitable for the animal (e.g., Savannah, Aquatic).
         """
-        # Protected attributes are used to allow access by subclasses (e.g., Mammal).
-        self._name: str = name
-        self._species: str = species
-        self._age: int = age
-        self._dietary_needs: str = dietary_needs
-        self._environment: str = environment
-        self.__health_records: list = []    # Stores animal’s health records privately
+        # Use properties to ensure validation via setters
+        self.name = name
+        self.species = species
+        self.age = age
+        self.dietary_needs = dietary_needs
+        self.environment = environment
+
+        # Initialize empty list to store health records
+        self.__health_records = []
 
 # ============================ Getters ==========================================================
     # Return the current value of each attribute
@@ -74,10 +80,12 @@ class Animal(ABC):
 
         Raises:
             TypeError: If the name is not a string.
-             ValueError: If the name is empty.
+            ValueError: If the name is empty.
         """
+        # Validate type
         if not isinstance (new_name, str):
             raise TypeError('Name must be a string.')
+        # Validate not empty
         if new_name.strip() == '':
             raise ValueError('Name cannot be empty.')
         self._name = new_name
@@ -90,8 +98,10 @@ class Animal(ABC):
             TypeError: If the species is not a string.
             ValueError: If the species is empty.
         """
+        # Validate type
         if not isinstance (new_species, str):
             raise TypeError('Species must be a string.')
+        # Validate not empty
         if new_species.strip() == '':
             raise ValueError('Species cannot be empty.')
         self._species = new_species
@@ -104,8 +114,12 @@ class Animal(ABC):
             TypeError: If age is not an integer (or is a boolean / None).
             ValueError: If age is negative.
         """
+        # Check for bool first because in Python, bool is a subclass of int
+        # isinstance(True, int) returns True, so we must exclude bools explicitly
         if isinstance(new_age, bool) or not isinstance (new_age, int):
             raise TypeError('Age must be an integer (not bool or None).')
+
+        # Ensure age is not negative
         if new_age < 0:
             raise ValueError('Age cannot be negative.')
         self._age = new_age
@@ -118,15 +132,26 @@ class Animal(ABC):
             TypeError: If the dietary needs are not a string.
             ValueError: If the dietary needs are empty.
         """
+        # Validate type
         if not isinstance (new_diet, str):
             raise TypeError('Dietary needs must be a string.')
+        # Validate not empty
         if new_diet.strip() == '':
             raise ValueError('Dietary needs cannot be empty.')
         self._dietary_needs = new_diet
 
     def set_environment(self, new_env: str) -> None:
+        """
+        Set a new environment for the animal.
+
+        Raises:
+            TypeError: If the environment is not a string.
+            ValueError: If the environment is empty.
+        """
+        # Validate type
         if not isinstance(new_env, str):
             raise TypeError('Environment must be a string.')
+        # Validate not empty
         if new_env.strip() == '':
             raise ValueError('Environment cannot be empty.')
         self._environment = new_env
@@ -140,6 +165,7 @@ class Animal(ABC):
     environment = property(get_environment, set_environment)
 
 # ============================ Abstract Methods ==========================================================
+    # These methods must be implemented by all subclasses (Mammal, Reptile, Bird)
     @abstractmethod
     def eat(self) -> str:
         """Each animal subclass must define its eating behavior."""
@@ -156,37 +182,70 @@ class Animal(ABC):
         pass
 
 # ============================== Health Records ============================================================
-    def add_health_record(self, record: str) -> str:
+    def add_health_record(self, record) -> str:
         """
-        Add a health record entry for this animal.
+        Add a HealthRecord instance to this animal's health records.
+
+        This method ensures that only unique health records are added
+        by comparing the record's description, date reported, and severity level.
 
         Args:
-            record (str): Description of the health update or medical record.
+            record (HealthRecord): A HealthRecord object representing a medical record.
+
+        Raises:
+            TypeError: If 'record' is not an instance of HealthRecord.
 
         Returns:
-            str: A confirmation message after adding the record.
+            str: Confirmation message after adding the record, or a notice
+                 if the record already exists.
         """
+        # Ensure the provided object is a HealthRecord instance
+        if not isinstance(record, HealthRecord):
+            raise TypeError('Record must be a HealthRecord instance.')
+
+        # Prevent duplicate records using __eq__
+        if record in self.__health_records:
+            return f'Record already exists for {self.name}.'
+
+        # Add the record to the internal list
         self.__health_records.append(record)
-        msg = f'Health record added to {self.name}.'
-        print(msg)
-        return msg
+        return f'Health record added to {self.name}.'
 
     def display_health_records(self) -> list:
         """
-        Display all stored health records for this animal.
+        Display all health records for this animal.
 
         Returns:
-            list | str: List of health records, or message if none exist.
+            list: A list of HealthRecord objects. Empty list if none exist.
         """
-        if not self.__health_records:
-            msg = f'{self.name} has no health records.'
-            print(msg)
-            return msg
-        else:
-            # Iterates through the records and prints them out
-            for record in self.__health_records:
-                print(record)
-            return list(self.__health_records)
+        # Returns empty list [] if no records
+        return list(self.__health_records)
+
+    def has_critical_health_issues(self) -> bool:
+        """
+        Check if the animal has any critical health issues.
+
+        Returns:
+            bool: True if any health record is critical, False otherwise.
+        """
+        # Loop through all health records
+        for record in self.__health_records:
+            # Check if any record is marked as critical using HealthRecord's is_critical() method
+            if record.is_critical():
+                return True  # Found at least one critical issue
+        return False   # No critical issues found
+
+    def can_be_moved(self) -> bool:
+        """
+        Determine if the animal can be safely moved to another enclosure.
+        Animals with critical health issues should not be moved.
+
+        Returns:
+            bool: True if animal can be moved, False if under critical treatment.
+        """
+        # Animal can be moved only if it has no critical health issues
+        return not self.has_critical_health_issues()
+
 
 # =============================== String Method =================================================
     def __str__(self) -> str:
@@ -198,6 +257,7 @@ class Animal(ABC):
         Returns:
             str: A formatted string containing the animal details.
         """
+        # Format and return all animal attributes as a readable string
         return (f'Name: {self.name}\n'
                 f'Species: {self.species}\n'
                 f'Age: {self.age}\n'
@@ -216,8 +276,10 @@ class Animal(ABC):
         Returns:
             bool: True if both animals share the same attributes, False otherwise.
         """
+        # Check if comparing with another Animal instance
         if not isinstance(other, Animal):
             return False
+        # Compare all attributes
         return (self.name == other.name and
                 self.species == other.species and
                 self.age == other.age and
@@ -250,12 +312,18 @@ class Mammal(Animal):
             hair_type (str): Description of hair or fur type.
             blood_type (str): Type of blood temperature regulation (e.g., warm-blooded).
         """
+        # Initialize parent Animal class with common attributes
         super().__init__(name, species, age, dietary_needs, environment)
-        self._sound: str = sound
-        self._hair_type: str = hair_type
+
+        # Initialize Mammal specific attributes using properties
+        self.sound: str = sound
+        self.hair_type: str = hair_type
+
+        # Blood type is read-only (no setter)
         self._blood_type: str = blood_type
 
 # ================================ Getters ============================================================
+    # Return the current value of each Mammal specific attribute
     def get_sound(self) -> str:
         """Return the sound made by the mammal."""
         return self._sound
@@ -269,6 +337,7 @@ class Mammal(Animal):
         return self._blood_type
 
 # ================================== Setters ===========================================================
+    # Validate and set new values for Mammal specific attributes
     def set_sound(self, sound: str) -> None:
         """
         Set the sound made by the mammal.
@@ -277,8 +346,10 @@ class Mammal(Animal):
             TypeError: If the sound is not a string.
             ValueError: If the sound is empty.
         """
+        # Validate type
         if not isinstance (sound, str):
             raise TypeError('Sound must be a string.')
+        # Validate not empty
         if sound.strip() == '':
             raise ValueError('Sound cannot be empty.')
         self._sound = sound
@@ -291,20 +362,23 @@ class Mammal(Animal):
             TypeError: If the hair type is not a string.
             ValueError: If the hair type is empty.
         """
+        # Validate type
         if not isinstance (hair_type, str):
             raise TypeError('Hair type must be a string.')
+        # Validate not empty
         if hair_type.strip() == '':
             raise ValueError('Hair type cannot be empty.')
         self._hair_type = hair_type
 
     # Note: blood_type does not have a setter, implying it is fixed after instantiation.
 # =================================== Properties ======================================================
+    # Define properties for Mammal specific attributes
     sound = property(get_sound, set_sound)
     hair_type = property(get_hair_type, set_hair_type)
     blood_type = property(get_blood_type)
 
 # =================================== Methods =========================================================
-    # Implementation of abstract methods
+    # Implementation of abstract methods from Animal base class
     def eat(self) -> str:
         """Return a message describing how the mammal eats."""
         return f'{self.name} the {self.species} is eating {self.dietary_needs}.'
@@ -328,6 +402,7 @@ class Mammal(Animal):
         Returns:
             str: A formatted string containing the mammal's complete details.
         """
+        # Call parent __str__ and append Mammal specific attributes
         return (super().__str__() +
                 f'Sound: {self.sound}\n'
                 f'Hair type: {self.hair_type}\n'
@@ -344,8 +419,10 @@ class Mammal(Animal):
         Returns:
             bool: True if both mammals share the same attributes.
         """
+        # Check type first
         if not isinstance(other, Mammal):
             return False
+        # Compare parent attributes AND Mammal specific attributes
         return (super().__eq__(other) and
                 self.sound == other.sound and
                 self.hair_type == other.hair_type and
@@ -379,13 +456,17 @@ class Reptile(Animal):
             blood_type (str): Blood temperature type (e.g., cold-blooded).
             is_venomous (bool): Whether the reptile is venomous.
         """
+        # Initialize parent Animal class with common attributes
         super().__init__(name, species, age, dietary_needs, environment)
-        self._sound: str = sound
-        self._skin_type: str = skin_type
-        self._blood_type: str = blood_type
-        self._is_venomous: bool = is_venomous
+
+        # Initialize Reptile specific attributes using properties
+        self.sound: str = sound
+        self.skin_type: str = skin_type
+        self._blood_type: str = blood_type  # Blood type is read only (no setter)
+        self.is_venomous: bool = is_venomous
 
     # =================================== Getters ===========================================================================
+    # Return the current value of each Reptile specific attribute
     def get_sound(self) -> str:
         """Return the sound made by the reptile."""
         return self._sound
@@ -403,6 +484,7 @@ class Reptile(Animal):
         return self._is_venomous
 
     # ==================================== Setters =========================================================================
+    # Validate and set new values for Reptile specific attributes
     def set_sound(self, sound: str) -> None:
         """
         Set the sound made by the reptile.
@@ -411,8 +493,10 @@ class Reptile(Animal):
             TypeError: If the sound is not a string.
             ValueError: If the sound is an empty string.
         """
+        # Validate type
         if not isinstance(sound, str):
             raise TypeError('Sound must be a string.')
+        # Validate not empty
         if sound.strip() == '':
             raise ValueError('Sound cannot be empty.')
         self._sound = sound
@@ -425,8 +509,10 @@ class Reptile(Animal):
             TypeError: If the skin type is not a string.
             ValueError: If the skin type is an empty string.
         """
+        # Validate type
         if not isinstance(skin_type, str):
             raise TypeError('Skin type must be a string.')
+        # Validate not empty
         if skin_type.strip() == '':
             raise ValueError('Skin type cannot be empty.')
         self._skin_type = skin_type
@@ -438,11 +524,13 @@ class Reptile(Animal):
         Raises:
             TypeError: If is_venomous is not a boolean.
         """
+        # Validate type
         if not isinstance(is_venomous, bool):
             raise TypeError('Is Venomous must be a boolean (True/False).')
         self._is_venomous = is_venomous
 
     # =================================== Properties ==============================================
+    # Define properties for Reptile specific attributes
     sound = property(get_sound, set_sound)
     skin_type = property(get_skin_type, set_skin_type)
     blood_type = property(get_blood_type)
@@ -474,6 +562,7 @@ class Reptile(Animal):
         Returns:
             str: A formatted string containing the reptile's complete details.
         """
+        # Call parent __str__ and append Reptile specific attributes
         return (super().__str__() +
                 f'Sound: {self.sound}\n'
                 f'Skin type: {self.skin_type}\n'
@@ -491,8 +580,10 @@ class Reptile(Animal):
         Returns:
             bool: True if both reptiles share the same attributes.
         """
+        # Check type first
         if not isinstance(other, Reptile):
             return False
+        # Compare parent attributes AND Reptile specific attributes
         return (super().__eq__(other) and
                 self.sound == other.sound and
                 self.skin_type == other.skin_type and
@@ -528,13 +619,17 @@ class Bird(Animal):
             blood_type (str): Blood temperature type (e.g., warm-blooded).
             can_fly (bool): Indicates if the bird can fly.
         """
+        # Initialize parent Animal class with common attributes
         super().__init__(name, species, age, dietary_needs, environment)
-        self._sound: str = sound
-        self._feather_type: str = feather_type
-        self._blood_type: str = blood_type
-        self._can_fly: bool = can_fly
+
+        # Initialize Bird specific attributes using properties
+        self.sound: str = sound
+        self.feather_type: str = feather_type
+        self._blood_type: str = blood_type    # Blood type is read-only (no setter)
+        self.can_fly: bool = can_fly
 
     # ===================================== Getters =========================================================
+    # Return the current value of each Bird specific attribute
     def get_sound(self) -> str:
         """Return the sound made by the bird."""
         return self._sound
@@ -552,6 +647,7 @@ class Bird(Animal):
         return self._can_fly
 
     # ===================================== Setters ============================================================
+    # Validate and set new values for Bird specific attributes
     def set_sound(self, sound: str) -> None:
         """
         Set the sound made by the bird.
@@ -560,9 +656,10 @@ class Bird(Animal):
             TypeError: If the sound is not a string.
             ValueError: If the sound is an empty string.
         """
+        # Validate type
         if not isinstance(sound, str):
             raise TypeError('Sound must be a string.')
-        self._sound = sound
+        # Validate not empty
         if sound.strip() == '':
             raise ValueError('Sound cannot be empty.')
         self._sound = sound
@@ -575,9 +672,10 @@ class Bird(Animal):
             TypeError: If the feather type is not a string.
             ValueError: If the feather type is an empty string.
         """
+        # Validate type
         if not isinstance(feather_type, str):
             raise TypeError('Feather type must be a string.')
-        self._feather_type = feather_type
+        # Validate not empty
         if feather_type.strip() == '':
             raise ValueError('Feather type cannot be empty.')
         self._feather_type = feather_type
@@ -589,18 +687,20 @@ class Bird(Animal):
         Raises:
             TypeError: If can_fly is not a boolean.
         """
+        # Validate type
         if not isinstance(can_fly, bool):
             raise TypeError('Can fly must be a boolean (True/False).')
         self._can_fly = can_fly
 
     # ================================== Properties =====================================================
+    # Define properties for Bird specific attributes
     sound = property(get_sound, set_sound)
     feather_type = property(get_feather_type, set_feather_type)
-    blood_type = property(get_blood_type)
+    blood_type = property(get_blood_type)   # Read-only (no setter)
     can_fly = property(get_can_fly, set_can_fly)
 
     # ================================== Methods =========================================================
-    # Implementation of abstract methods
+    # Implementation of abstract methods from Animal base class
     def eat(self) -> str:
         """Return a message describing how the bird eats."""
         return f'{self.name} the {self.species} is eating {self.dietary_needs}.'
@@ -624,6 +724,7 @@ class Bird(Animal):
         Returns:
             str: A formatted string containing the bird's complete details.
         """
+        # Call parent __str__ and append Bird specific attributes
         return (super().__str__() +
                 f'Sound: {self.sound}\n'
                 f'Feather type: {self.feather_type}\n'
@@ -640,8 +741,10 @@ class Bird(Animal):
         Returns:
             bool: True if both birds share the same attributes.
         """
+        # Check type first
         if not isinstance(other, Bird):
             return False
+        # Compare parent attributes and Bird specific attributes
         return (super().__eq__(other) and
                 self.sound == other.sound and
                 self.feather_type == other.feather_type and
