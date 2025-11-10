@@ -336,3 +336,104 @@ def test_staff_equality_with_non_staff(zookeeper):
     assert zookeeper != 101
 
 
+# ===============================================
+#        Zookeeper Tests
+# ===============================================
+# Test Zookeeper specific methods including feeding animals and cleaning enclosures
+
+# ============================ Initialization Test ====================================================
+
+def test_zookeeper_initialization():
+    """Test that Zookeeper initializes with correct role."""
+    keeper = Zookeeper('John', 101)
+    assert keeper.name == 'John'
+    assert keeper.staff_id == 101
+    assert keeper.role == 'Zookeeper'
+
+
+# ============================ Feed Animal Tests ======================================================
+
+def test_feed_animal_valid(zookeeper, sample_lion):
+    """Test feeding an assigned animal."""
+    # Assign animal first
+    zookeeper.assign_animal(sample_lion)
+
+    # Feed the animal
+    msg = zookeeper.feed_animal(sample_lion)
+
+    # Check confirmation message
+    assert 'John (Zookeeper) feeds Simba the Lion.' in msg
+
+
+def test_feed_animal_not_assigned(zookeeper, sample_lion):
+    """Test that feeding an unassigned animal raises ValueError."""
+    # Do not assign the animal
+
+    # Attempting to feed should raise ValueError
+    with pytest.raises(ValueError):
+        zookeeper.feed_animal(sample_lion)
+
+
+def test_feed_animal_invalid_type(zookeeper):
+    """Test that feeding a non-Animal object raises TypeError."""
+    # Type error: must be Animal instance
+    with pytest.raises(TypeError):
+        zookeeper.feed_animal('not an animal')
+
+
+# ============================ Clean Enclosure Tests ==================================================
+
+def test_clean_enclosure_valid(zookeeper, sample_enclosure):
+    """Test cleaning an assigned enclosure."""
+    # Assign enclosure first
+    zookeeper.assign_enclosure(sample_enclosure)
+
+    # Clean the enclosure
+    msg = zookeeper.clean_enclosure(sample_enclosure)
+
+    # Check confirmation message
+    assert 'John (Zookeeper) cleaned the Savannah enclosure' in msg
+    # Verify enclosure cleanliness is now 100
+    assert sample_enclosure.cleanliness_level == 100
+
+
+def test_clean_enclosure_not_assigned(zookeeper, sample_enclosure):
+    """Test that cleaning an unassigned enclosure raises ValueError."""
+    # Do not assign the enclosure
+
+    # Attempting to clean should raise ValueError
+    with pytest.raises(ValueError):
+        zookeeper.clean_enclosure(sample_enclosure)
+
+
+def test_clean_enclosure_invalid_type(zookeeper):
+    """Test that cleaning a non-Enclosure object raises TypeError."""
+    # Type error: must be Enclosure instance
+    with pytest.raises(TypeError):
+        zookeeper.clean_enclosure('not an enclosure')
+
+
+# ============================ Perform Duties Test ====================================================
+
+def test_zookeeper_perform_duties_empty(zookeeper):
+    """Test perform duties when no animals or enclosures are assigned."""
+    duties = zookeeper.perform_duties()
+
+    assert 'John (Zookeeper) performed duties.' in duties
+    assert 'Feed Animals: None' in duties
+    assert 'Cleaning Enclosures: None' in duties
+
+
+def test_zookeeper_perform_duties_with_assignments(zookeeper, sample_lion, sample_tiger, sample_enclosure):
+    """Test perform duties when animals and enclosures are assigned."""
+    # Assign animals and enclosure
+    zookeeper.assign_animal(sample_lion)
+    zookeeper.assign_animal(sample_tiger)
+    zookeeper.assign_enclosure(sample_enclosure)
+
+    duties = zookeeper.perform_duties()
+
+    assert 'John (Zookeeper) performed duties.' in duties
+    assert 'Simba (Lion)' in duties
+    assert 'Raja (Tiger)' in duties
+    assert 'Savannah enclosure' in duties
