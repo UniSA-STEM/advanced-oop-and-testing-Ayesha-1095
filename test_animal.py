@@ -12,6 +12,7 @@ This is my own work as defined by the University's Academic Integrity Policy.
 
 import pytest
 from animal import Animal, Mammal, Reptile, Bird
+from health_record import HealthRecord
 
 # ===============================================
 #        Animal and Mammal Tests
@@ -127,27 +128,97 @@ def test_mammal_edge_setters(lion):
     with pytest.raises(ValueError):
         lion.hair_type = '   '
 
-# ==== Health Record Tests ====
-# Verify that health records can be added and displayed correctly
-def test_mammal_health_records(lion):
-    """Test adding and displaying health records for a Mammal."""
-    # Empty initially
-    assert lion.display_health_records() == 'Simba has no health records.'
-    # Add records
-    lion.add_health_record('Vaccinated')
-    lion.add_health_record('Checkup complete')
-    records = lion.display_health_records()
-    # Ensure records are displayed
-    assert 'Vaccinated' in records
-    assert 'Checkup complete' in records
+# ==== Health Related Method Tests ====
+# These tests cover the Animal class methods related to health records:
+#   - add_health_record()
+#   - display_health_records()
+#   - has_critical_health_issues()
+#   - can_be_moved()
+# They check valid additions, type safety, duplicate handling, and critical health logic.
 
-def test_mammal_health_record_type(lion):
-    """Ensure display_health_records returns a list after adding a record."""
-    lion.add_health_record('X-ray done')
-    result = lion.display_health_records()
-    # Should be a list
-    assert isinstance(result, list)
-    assert len(result) == 1
+def test_add_health_record(lion):
+    """Test adding a single HealthRecord to an animal."""
+    rec = HealthRecord('Vaccinated', '2025-11-09', 'Low', 'Routine check')
+    msg = lion.add_health_record(rec)
+    # Confirm addition message
+    assert 'Health record added to Simba.' in msg
+    # Ensure record is present
+    records = lion.display_health_records()
+    assert isinstance(records, list)
+    assert len(records) == 1
+    assert records[0] == rec
+
+def test_add_multiple_health_records(lion):
+    """Test adding multiple HealthRecord objects to an animal."""
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Medium', 'Follow-up')
+    rec2 = HealthRecord('Surgery', '2025-11-10', 'Critical', 'Immediate attention')
+    lion.add_health_record(rec1)
+    lion.add_health_record(rec2)
+    records = lion.display_health_records()
+    assert len(records) == 2
+    assert rec1 in records
+    assert rec2 in records
+
+def test_add_invalid_health_record(lion):
+    """Adding an invalid health record type should raise TypeError."""
+    with pytest.raises(TypeError):
+        lion.add_health_record(123)  # Not a HealthRecord instance
+
+def test_duplicate_health_record(lion):
+    """Adding the same HealthRecord twice should return a duplicate message."""
+    rec = HealthRecord('Vaccinated', '2025-11-09', 'Low', 'Routine check')
+    msg1 = lion.add_health_record(rec)
+    msg2 = lion.add_health_record(rec)  # Duplicate
+    assert 'Health record added to Simba.' in msg1
+    assert 'Record already exists for Simba' in msg2
+
+def test_has_critical_health_issues(lion):
+    """Check has_critical_health_issues detects critical records correctly."""
+    # No records → not critical
+    assert lion.has_critical_health_issues() is False
+
+    # Add non-critical record
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Low', 'Routine check')
+    lion.add_health_record(rec1)
+    assert lion.has_critical_health_issues() is False
+
+    # Add critical record
+    rec2 = HealthRecord('Surgery', '2025-11-10', 'Critical', 'Immediate attention')
+    lion.add_health_record(rec2)
+    assert lion.has_critical_health_issues() is True
+
+def test_can_be_moved(lion):
+    """Verify can_be_moved returns False if there are critical health issues."""
+    # Initially no records, safe to move
+    assert lion.can_be_moved() is True
+
+    # Add non-critical record, still safe
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Medium', 'Routine check')
+    lion.add_health_record(rec1)
+    assert lion.can_be_moved() is True
+
+    # Add critical record, cannot move
+    rec2 = HealthRecord('Injury', '2025-11-10', 'Critical', 'Immediate attention')
+    lion.add_health_record(rec2)
+    assert lion.can_be_moved() is False
+
+def test_display_health_records_empty(lion):
+    """Display health records returns message if there are no records."""
+    records = lion.display_health_records()
+    assert isinstance(records, list)
+    assert records == []
+
+def test_display_health_records_nonempty(lion):
+    """Display health records returns a list of HealthRecord objects when present."""
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Medium', 'Routine check')
+    rec2 = HealthRecord('Vaccinated', '2025-11-09', 'Low', 'Routine check')
+    lion.add_health_record(rec1)
+    lion.add_health_record(rec2)
+    records = lion.display_health_records()
+    assert isinstance(records, list)
+    assert all(isinstance(r, HealthRecord) for r in records)
+    assert rec1 in records
+    assert rec2 in records
 
 # ==== String Method Test ====
 # Test that __str__ returns a formatted string containing all attributes
@@ -285,25 +356,97 @@ def test_reptile_edge_setters(snake):
     with pytest.raises(ValueError):
         snake.skin_type = '   '
 
-# ==== Health Record Tests ====
-# Verifies adding and retrieving health records for a Reptile
-def test_reptile_health_records(snake):
-    """Test adding and displaying health records for a Reptile."""
-    # Empty initially
-    assert snake.display_health_records() == 'Python has no health records.'
-    # Add records
-    snake.add_health_record('Vaccinated')
-    snake.add_health_record('Checkup complete')
-    records = snake.display_health_records()
-    assert 'Vaccinated' in records
-    assert 'Checkup complete' in records
+# ==== Reptile Health Record Tests ====
+# These tests cover the Reptile class methods related to health records:
+#   - add_health_record()
+#   - display_health_records()
+#   - has_critical_health_issues()
+#   - can_be_moved()
+# They check valid additions, type safety, duplicate handling, and critical health logic.
 
-def test_reptile_health_record_type(snake):
-    """Ensure display_health_records returns a list after adding a record."""
-    snake.add_health_record('X-ray done')
-    result = snake.display_health_records()
-    assert isinstance(result, list)
-    assert len(result) == 1
+def test_add_health_record_reptile(snake):
+    """Test adding a single HealthRecord to a Reptile."""
+    rec = HealthRecord('Shedding', '2025-11-09', 'Low', 'Routine check')
+    msg = snake.add_health_record(rec)
+    # Confirm addition message
+    assert msg == 'Health record added to Python.'
+    # Ensure record is present
+    records = snake.display_health_records()
+    assert isinstance(records, list)
+    assert len(records) == 1
+    assert records[0] == rec
+
+def test_add_multiple_health_records_reptile(snake):
+    """Test adding multiple HealthRecord objects to a Reptile."""
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Medium', 'Follow-up')
+    rec2 = HealthRecord('Injury', '2025-11-10', 'Critical', 'Immediate attention')
+    snake.add_health_record(rec1)
+    snake.add_health_record(rec2)
+    records = snake.display_health_records()
+    assert len(records) == 2
+    assert rec1 in records
+    assert rec2 in records
+
+def test_add_invalid_health_record_reptile(snake):
+    """Adding an invalid health record type should raise TypeError."""
+    with pytest.raises(TypeError):
+        snake.add_health_record(123)  # Not a HealthRecord instance
+
+def test_duplicate_health_record_reptile(snake):
+    """Adding the same HealthRecord twice should return a duplicate message."""
+    rec = HealthRecord('Shedding', '2025-11-09', 'Low', 'Routine check')
+    msg1 = snake.add_health_record(rec)
+    msg2 = snake.add_health_record(rec)  # Duplicate
+    assert msg1 == 'Health record added to Python.'
+    assert msg2 == 'Record already exists for Python.'
+
+def test_has_critical_health_issues_reptile(snake):
+    """Check has_critical_health_issues detects critical records correctly."""
+    # No records → not critical
+    assert snake.has_critical_health_issues() is False
+
+    # Add non-critical record
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Medium', 'Routine check')
+    snake.add_health_record(rec1)
+    assert snake.has_critical_health_issues() is False
+
+    # Add critical record
+    rec2 = HealthRecord('Injury', '2025-11-10', 'Critical', 'Immediate attention')
+    snake.add_health_record(rec2)
+    assert snake.has_critical_health_issues() is True
+
+def test_can_be_moved_reptile(snake):
+    """Verify can_be_moved returns False if there are critical health issues."""
+    # Initially no records, safe to move
+    assert snake.can_be_moved() is True
+
+    # Add non-critical record, still safe
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Low', 'Routine check')
+    snake.add_health_record(rec1)
+    assert snake.can_be_moved() is True
+
+    # Add critical record, cannot move
+    rec2 = HealthRecord('Surgery', '2025-11-10', 'Critical', 'Immediate attention')
+    snake.add_health_record(rec2)
+    assert snake.can_be_moved() is False
+
+def test_display_health_records_empty_reptile(snake):
+    """Display health records returns message if there are no records."""
+    records = snake.display_health_records()
+    assert isinstance(records, list)
+    assert records == []
+
+def test_display_health_records_nonempty_reptile(snake):
+    """Display health records returns a list of HealthRecord objects when present."""
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Medium', 'Routine check')
+    rec2 = HealthRecord('Shedding', '2025-11-09', 'Low', 'Routine check')
+    snake.add_health_record(rec1)
+    snake.add_health_record(rec2)
+    records = snake.display_health_records()
+    assert isinstance(records, list)
+    assert all(isinstance(r, HealthRecord) for r in records)
+    assert rec1 in records
+    assert rec2 in records
 
 # ==== String Method Tests ====
 # Checks that __str__ returns a properly formatted description
@@ -445,25 +588,83 @@ def test_bird_edge_setters(parrot):
 
 
 # ==== Health Record Tests ====
-# Verifies adding and retrieving health records for a Bird
-def test_bird_health_records(parrot):
-    """Test adding and displaying health records for a Bird."""
-    # Empty initially
-    assert parrot.display_health_records() == 'Polly has no health records.'
-    # Add records
-    parrot.add_health_record('Vaccinated')
-    parrot.add_health_record('Checkup complete')
+# These tests cover the Bird class methods related to health records:
+#   - add_health_record()
+#   - display_health_records()
+#   - has_critical_health_issues()
+#   - can_be_moved()
+# They check valid additions, type safety, duplicate handling, and critical health logic.
+def test_add_health_record_bird(parrot):
+    """Test adding a single HealthRecord to a Bird."""
+    rec = HealthRecord('Wing Check', '2025-11-09', 'Low', 'Routine check')
+    msg = parrot.add_health_record(rec)
+    assert msg == 'Health record added to Polly.'
     records = parrot.display_health_records()
-    assert 'Vaccinated' in records
-    assert 'Checkup complete' in records
+    assert isinstance(records, list)
+    assert len(records) == 1
+    assert records[0] == rec
 
+def test_add_multiple_health_records_bird(parrot):
+    """Test adding multiple HealthRecord objects to a Bird."""
+    rec1 = HealthRecord('Beak Trim', '2025-11-09', 'Medium', 'Follow-up')
+    rec2 = HealthRecord('Wing Injury', '2025-11-10', 'Critical', 'Immediate attention')
+    parrot.add_health_record(rec1)
+    parrot.add_health_record(rec2)
+    records = parrot.display_health_records()
+    assert len(records) == 2
+    assert rec1 in records
+    assert rec2 in records
 
-def test_bird_health_record_type(parrot):
-    """Ensure display_health_records returns a list after adding a record."""
-    parrot.add_health_record('Wing X-ray done')
-    result = parrot.display_health_records()
-    assert isinstance(result, list)
-    assert len(result) == 1
+def test_add_invalid_health_record_bird(parrot):
+    """Adding an invalid health record type should raise TypeError for Bird."""
+    with pytest.raises(TypeError):
+        parrot.add_health_record(123)
+
+def test_duplicate_health_record_bird(parrot):
+    """Adding the same HealthRecord twice should return a duplicate message for Bird."""
+    rec = HealthRecord('Wing Check', '2025-11-09', 'Low', 'Routine check')
+    msg1 = parrot.add_health_record(rec)
+    msg2 = parrot.add_health_record(rec)
+    assert msg1 == 'Health record added to Polly.'
+    assert msg2 == 'Record already exists for Polly.'
+
+def test_has_critical_health_issues_bird(parrot):
+    """Check has_critical_health_issues detects critical records correctly for Bird."""
+    assert parrot.has_critical_health_issues() is False
+    rec1 = HealthRecord('Routine Check', '2025-11-09', 'Low', 'Checkup')
+    parrot.add_health_record(rec1)
+    assert parrot.has_critical_health_issues() is False
+    rec2 = HealthRecord('Wing Fracture', '2025-11-10', 'Critical', 'Immediate attention')
+    parrot.add_health_record(rec2)
+    assert parrot.has_critical_health_issues() is True
+
+def test_can_be_moved_bird(parrot):
+    """Verify can_be_moved returns False if Bird has critical health issues."""
+    assert parrot.can_be_moved() is True
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Low', 'Routine')
+    parrot.add_health_record(rec1)
+    assert parrot.can_be_moved() is True
+    rec2 = HealthRecord('Injury', '2025-11-10', 'Critical', 'Immediate')
+    parrot.add_health_record(rec2)
+    assert parrot.can_be_moved() is False
+
+def test_display_health_records_empty_bird(parrot):
+    """Display health records returns message if Bird has no records."""
+    records = parrot.display_health_records()
+    assert isinstance(records, list)
+    assert records == []
+
+def test_display_health_records_nonempty_bird(parrot):
+    """Display health records returns a list of HealthRecord objects for Bird."""
+    rec1 = HealthRecord('Checkup', '2025-11-09', 'Low', 'Routine')
+    rec2 = HealthRecord('Wing Check', '2025-11-09', 'Medium', 'Follow-up')
+    parrot.add_health_record(rec1)
+    parrot.add_health_record(rec2)
+    records = parrot.display_health_records()
+    assert isinstance(records, list)
+    assert all(isinstance(r, HealthRecord) for r in records)
+    assert rec1 in records
+    assert rec2 in records
 
 
 # ==== String Method Tests ====
@@ -491,6 +692,7 @@ def test_bird_equality():
     b3 = Bird('Kiwi', 'Parrot', 1, 'Seeds', 'Cage', 'Chirp', 'Green', 'Warm-blooded', False)
     assert b1 == b2
     assert b1 != b3
+
 
 
 def test_bird_equality_with_different_type(parrot):
