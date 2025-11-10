@@ -231,20 +231,93 @@ class Staff(ABC):
 class Zookeeper(Staff):
     """
     Represents a zookeeper responsible for feeding animals and cleaning enclosures.
+    Zookeepers make sure animals are fed on time and that their enclosures are kept clean.
     """
-    def __init__(self, name, staff_id):
-        super().__init__(name, staff_id, role = 'Zookeeper')
 
-    def feed_animal(self, animal):
-        """Feeds the assigned animal."""
-        pass
+    def __init__(self, name: str, staff_id: int):
+        """
+        Initializes a Zookeeper object by calling the parent Staff class constructor.
 
-    def clean_enclosure(self, enclosure):
-        """ Cleans the assigned enclosure."""
-        pass
+        Args:
+            name (str): The name of the zookeeper.
+            staff_id (int): Unique ID assigned to the zookeeper.
+        """
+        # Call the parent class constructor and set the role to "Zookeeper"
+        super().__init__(name, staff_id, role='Zookeeper')
 
-    def perform_duties(self):
-        pass
+    def feed_animal(self, animal: Animal) -> str:
+        """
+        Feeds an assigned animal.
+
+        Args:
+            animal (Animal): The animal to feed.
+
+        Raises:
+            TypeError: If the argument is not an Animal instance.
+            ValueError: If the animal is not assigned to this staff member.
+
+        Returns:
+            str: Confirmation message indicating the feeding action.
+        """
+        # Make sure the argument is a valid Animal instance
+        if not isinstance(animal, Animal):
+            raise TypeError('Animal must be an Animal instance.')
+
+        # Check if this animal is assigned to this zookeeper
+        if animal not in self._assigned_animals:
+            raise ValueError(f'{animal.name} the {animal.species} is not assigned to {self.name}.')
+
+        # Return a message confirming the feeding action
+        return f'{self.name} ({self.role}) feeds {animal.name} the {animal.species}.'
+
+    def clean_enclosure(self, enclosure: Enclosure) -> str:
+        """
+        Cleans an assigned enclosure by calling the enclosure's clean method.
+
+        Args:
+            enclosure (Enclosure): The enclosure to clean.
+
+        Raises:
+            TypeError: If the argument is not an Enclosure instance.
+            ValueError: If the enclosure is not assigned to this staff member.
+
+        Returns:
+            str: Confirmation message indicating the cleaning action.
+        """
+        # Make sure the argument is a valid Enclosure instance
+        if not isinstance(enclosure, Enclosure):
+            raise TypeError('Enclosure must be an Enclosure instance.')
+
+        # Check if this enclosure is assigned to this zookeeper
+        if enclosure not in self._assigned_enclosures:
+            raise ValueError(f'{enclosure.environmental_type} enclosure is not assigned to {self.name}.')
+        # Clean the enclosure by calling the clean enclosure method from enclosure class
+        cleaning_result = enclosure.clean_enclosure()
+
+        # Return a message confirming the cleaning action
+        return f'{self.name} ({self.role}) cleaned the {enclosure.environmental_type} enclosure {cleaning_result}.'
+
+    def perform_duties(self) -> str:
+        """
+        Performs the daily duties of a zookeeper, including feeding animals
+        and cleaning enclosures.
+
+        Returns:
+            str: Summary of performed duties.
+        """
+        # Prepare a readable list of animals and enclosures handled by the zookeeper
+        fed_animals = ', '.join([f'{a.name} ({a.species})' for a in self._assigned_animals]) \
+            if self._assigned_animals else 'None'
+
+        clean_enclosures = ', '.join([f'{e.environmental_type} enclosure' for e in self._assigned_enclosures]) \
+            if self._assigned_enclosures else 'None'
+
+        # Return a summary of tasks completed
+        return (f"{self.name} ({self.role}) performed duties.\n"
+                f"Feed Animals: {fed_animals}\n"
+                f"Cleaning Enclosures: {clean_enclosures}\n")
+
+
 
 class Veterinarian(Staff):
     """
