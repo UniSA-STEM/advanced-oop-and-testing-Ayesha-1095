@@ -84,16 +84,88 @@ class Zoo:
 # ============================ Animal Management ==================================================
     # Methods for managing animals in the zoo
     def add_animal(self, animal) -> str:
-        """Add an animal to the zoo."""
-        pass
+        """
+        Adds an animal to the zoo.
+
+        Args:
+            animal (Animal): The animal to add to the zoo.
+
+        Raises:
+            TypeError: If animal is not an Animal instance.
+            ValueError: If animal is already in the zoo.
+
+        Returns:
+            str: Confirmation message after adding the animal.
+        """
+        # Validate that animal is an Animal instance
+        if not isinstance(animal, Animal):
+            raise TypeError('Only Animal objects can be added to the zoo.')
+
+        # Check for duplicate animals
+        if animal in self.__animals:
+            raise ValueError(f'{animal.name} the {animal.species} is already in the zoo.')
+
+        # Add animal to zoo
+        self.__animals.append(animal)
+        return f'{animal.name} the {animal.species} has been added to the zoo.'
+
 
     def remove_animal(self, animal: Animal) -> str:
-        """Removes an animal from the zoo."""
-        pass
+        """
+        Removes an animal from the zoo.
+
+        Args:
+            animal (Animal): The animal to remove from the zoo.
+
+        Raises:
+            TypeError: If animal is not an Animal instance.
+            ValueError: If animal is not in the zoo.
+
+        Returns:
+            str: Confirmation message after removing the animal.
+        """
+        # Validate that animal is an Animal instance
+        if not isinstance(animal, Animal):
+            raise TypeError('Only Animal objects can be removed from the zoo.')
+
+        # Check if animal exists in zoo
+        if animal not in self.__animals:
+            raise ValueError(f'{animal.name} the {animal.species} is not in the zoo.')
+
+        # Remove animal from zoo
+        self.__animals.remove(animal)
+        return f'{animal.name} the {animal.species} has been removed from the zoo.'
 
     def find_animal_by_name(self, name: str) -> Animal:
-        """Find an animal in the zoo by name."""
-        pass
+        """
+        Find an animal in the zoo by name.
+
+        Args:
+            name (str): The name of the animal to find.
+
+        Raises:
+            TypeError: If name is not a string.
+            ValueError: If name is empty or animal not found.
+
+        Returns:
+            Animal: The animal with the matching name.
+        """
+        # Validate name type
+        if not isinstance(name, str):
+            raise TypeError('Name must be a string.')
+
+        # Validate name not empty
+        if name.strip() == '':
+            raise ValueError('Name cannot be empty.')
+
+        # Search for animal by name
+        for animal in self.__animals:
+            if animal.name.lower() == name.lower():
+                return animal
+
+        # Animal not found
+        raise ValueError(f'No animal named "{name}" found in the zoo.')
+
 # ============================ Enclosure Management ===============================================
     # Methods for managing enclosures in the zoo
     def add_enclosure(self, enclosure: Enclosure) -> str:
