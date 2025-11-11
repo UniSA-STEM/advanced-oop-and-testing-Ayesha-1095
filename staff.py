@@ -323,19 +323,97 @@ class Veterinarian(Staff):
     """
     Represents a veterinarian responsible for animal health care and checks.
     """
-    def __init__(self, name, staff_id):
-        super().__init__(name, staff_id, role = 'Veterinarian')
 
-    def conduct_health_check(self, animal):
+    def __init__(self, name: str, staff_id: int):
+        """
+        Initializes a Veterinarian object by calling the parent Staff class constructor.
+
+        Args:
+            name (str): The name of the veterinarian.
+            staff_id (int): Unique ID assigned to the veterinarian.
+        """
+        # Call the parent constructor and set role as 'Veterinarian'
+        super().__init__(name, staff_id, role='Veterinarian')
+
+    def conduct_health_check(self, animal: Animal) -> str:
         """
         Conducts a health check on the given animal.
-        """
-        pass
-    def update_health_record(self, animal, record):
-        """
-        Updates the animal's health record with new notes or treatment.
-        """
-        pass
 
-    def perform_duties(self):
-        pass
+        Args:
+            animal (Animal): The animal to perform the health check on.
+
+        Raises:
+            TypeError: If the argument is not an Animal instance.
+            ValueError: If the animal is not assigned to this veterinarian.
+
+        Returns:
+            str: Confirmation message indicating the health check.
+        """
+        # Validate input type
+        if not isinstance(animal, Animal):
+            raise TypeError('Animal must be an Animal instance.')
+
+        # Ensure the veterinarian is assigned to this animal
+        if animal not in self._assigned_animals:
+            raise ValueError(f'{animal.name} the {animal.species} is not assigned to {self.name}.')
+
+        # Return a confirmation string
+        return f'{self.name} ({self.role}) conducted a health check on {animal.name} the {animal.species}.'
+
+    def update_health_record(self, animal: Animal, health_record: HealthRecord) -> str:
+        """
+        Updates the animal's health record with a HealthRecord instance.
+
+        Args:
+            animal (Animal): The animal to update.
+            health_record (HealthRecord): A HealthRecord instance.
+
+        Raises:
+            TypeError: If the animal is not an Animal instance, or record is not HealthRecord.
+            ValueError: If the animal is not assigned to this staff member.
+
+        Returns:
+            str: Confirmation message after updating.
+        """
+        # Ensure that animal is an Animal instance
+        if not isinstance(animal, Animal):
+            raise TypeError('Animal must be an Animal instance.')
+
+        # Ensure the veterinarian is assigned to this animal
+        if animal not in self._assigned_animals:
+            raise ValueError(f'{animal.name} the {animal.species} is not assigned to {self.name}.')
+
+        # Ensure that health_record is a HealthRecord instance
+        if not isinstance(health_record, HealthRecord):
+            raise TypeError('health_record must be a HealthRecord instance.')
+
+        # Add the health record to the animal
+        result = animal.add_health_record(health_record)
+
+        # Return message from the animal's add_health_record method
+        return f'{self.name} ({self.role}) {result}'
+
+    def perform_duties(self) -> str:
+        """
+        Performs the daily duties of a veterinarian, including health checks
+        on assigned animals.
+
+        Returns:
+            str: Summary of performed duties.
+        """
+        # Prepare a comma-separated list of assigned animals
+        animals_list = ', '.join([f'{a.name} ({a.species})' for a in self._assigned_animals]) \
+            if self._assigned_animals else 'None'
+
+        # Collect all health records for assigned animals into a summary
+        records_list = []
+        for a in self._assigned_animals:
+            for r in a.display_health_records():  # Retrieve health records
+                records_list.append(f'{a.name}: {r.summary()}')  # Append summary of each record
+        records_summary = '; '.join(records_list) if records_list else 'None'
+
+        # Return a structured summary of duties performed
+        return (f'{self.name} ({self.role}) performed duties.\n'
+                f'Animals Checked: {animals_list}\n'
+                f'Health Records Updated: {records_summary}\n')
+
