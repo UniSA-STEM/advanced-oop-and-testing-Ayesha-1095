@@ -11,8 +11,9 @@ This is my own work as defined by the University's Academic Integrity Policy.
 
 import pytest
 from staff import Staff, Zookeeper, Veterinarian
-from animal import Animal, Mammal
+from animal import Animal, Mammal, Reptile, Bird
 from enclosure import Enclosure
+from health_record import HealthRecord
 
 
 # ===============================================
@@ -437,3 +438,143 @@ def test_zookeeper_perform_duties_with_assignments(zookeeper, sample_lion, sampl
     assert 'Simba (Lion)' in duties
     assert 'Raja (Tiger)' in duties
     assert 'Savannah enclosure' in duties
+
+# ===============================================
+#        Veterinarian Tests
+# ===============================================
+# Test Veterinarian specific methods including health checks and health record updates
+
+# ============================ Initialization Test ====================================================
+
+def test_veterinarian_initialization():
+    """Test that Veterinarian initializes with correct role."""
+    vet = Veterinarian('Dr. Smith', 201)
+    assert vet.name == 'Dr. Smith'
+    assert vet.staff_id == 201
+    assert vet.role == 'Veterinarian'
+
+
+# ============================ Conduct Health Check Tests =============================================
+
+def test_conduct_health_check_valid(veterinarian, sample_lion):
+    """Test conducting a health check on an assigned animal."""
+    # Assign animal first
+    veterinarian.assign_animal(sample_lion)
+
+    # Conduct health check
+    msg = veterinarian.conduct_health_check(sample_lion)
+
+    # Check confirmation message
+    assert 'Dr. Smith (Veterinarian) conducted a health check on Simba the Lion.' in msg
+
+
+def test_conduct_health_check_not_assigned(veterinarian, sample_lion):
+    """Test that checking an unassigned animal raises ValueError."""
+    # Do not assign the animal
+
+    # Attempting to check should raise ValueError
+    with pytest.raises(ValueError):
+        veterinarian.conduct_health_check(sample_lion)
+
+
+def test_conduct_health_check_invalid_type(veterinarian):
+    """Test that checking a non-Animal object raises TypeError."""
+    # Type error: must be Animal instance
+    with pytest.raises(TypeError):
+        veterinarian.conduct_health_check('not an animal')
+
+
+# ============================ Update Health Record Tests =============================================
+
+def test_update_health_record_valid(veterinarian, sample_lion):
+    """Test updating an animal's health record."""
+    # Assign animal first
+    veterinarian.assign_animal(sample_lion)
+
+    # Create a health record
+    record = HealthRecord('Checkup', '2025-11-10', 'low', 'Routine')
+
+    # Update health record
+    msg = veterinarian.update_health_record(sample_lion, record)
+
+    # Check confirmation message
+    assert 'Dr. Smith (Veterinarian)' in msg
+    assert 'Health record added to Simba.' in msg
+
+    # Verify record was added to animal
+    records = sample_lion.display_health_records()
+    assert len(records) == 1
+    assert records[0] == record
+
+
+def test_update_health_record_animal_not_assigned(veterinarian, sample_lion):
+    """Test that updating record for unassigned animal raises ValueError."""
+    # Do not assign the animal
+    record = HealthRecord('Checkup', '2025-11-10', 'low', 'Routine')
+
+    # Attempting to update should raise ValueError
+    with pytest.raises(ValueError):
+        veterinarian.update_health_record(sample_lion, record)
+
+
+def test_update_health_record_invalid_animal_type(veterinarian):
+    """Test that updating with non-Animal object raises TypeError."""
+    record = HealthRecord('Checkup', '2025-11-10', 'low', 'Routine')
+
+    # Type error: animal must be Animal instance
+    with pytest.raises(TypeError):
+        veterinarian.update_health_record('not an animal', record)
+
+
+def test_update_health_record_invalid_record_type(veterinarian, sample_lion):
+    """Test that updating with non-HealthRecord object raises TypeError."""
+    # Assign animal first
+    veterinarian.assign_animal(sample_lion)
+
+    # Type error: record must be HealthRecord instance
+    with pytest.raises(TypeError):
+        veterinarian.update_health_record(sample_lion, 'not a record')
+
+
+# ============================ Perform Duties Test ====================================================
+
+def test_veterinarian_perform_duties_empty(veterinarian):
+    """Test perform_duties when no animals are assigned."""
+    duties = veterinarian.perform_duties()
+
+    assert 'Dr. Smith (Veterinarian) performed duties.' in duties
+    assert 'Animals Checked: None' in duties
+    assert 'Health Records Updated: None' in duties
+
+
+def test_veterinarian_perform_duties_with_animals(veterinarian, sample_lion):
+    """Test perform_duties when animals are assigned."""
+    # Assign animal
+    veterinarian.assign_animal(sample_lion)
+
+    duties = veterinarian.perform_duties()
+
+    assert 'Dr. Smith (Veterinarian) performed duties.' in duties
+    assert 'Simba (Lion)' in duties
+    assert 'Health Records Updated: None' in duties  # No records yet
+
+
+def test_veterinarian_perform_duties_with_health_records(veterinarian, sample_lion, sample_tiger):
+    """Test perform_duties when animals have health records."""
+    # Assign animals
+    veterinarian.assign_animal(sample_lion)
+    veterinarian.assign_animal(sample_tiger)
+
+    # Add health records
+    record1 = HealthRecord('Checkup', '2025-11-10', 'low', 'Routine')
+    record2 = HealthRecord('Injury', '2025-11-11', 'critical', 'Immediate care')
+    veterinarian.update_health_record(sample_lion, record1)
+    veterinarian.update_health_record(sample_tiger, record2)
+
+    duties = veterinarian.perform_duties()
+
+    assert 'Dr. Smith (Veterinarian) performed duties.' in duties
+    assert 'Simba (Lion)' in duties
+    assert 'Raja (Tiger)' in duties
+    assert 'Simba: Checkup (low) reported on 2025-11-10' in duties
+    assert 'Raja: Injury (critical) reported on 2025-11-11' in duties
