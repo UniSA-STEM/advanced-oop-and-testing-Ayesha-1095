@@ -9,6 +9,7 @@ This is my own work as defined by the University's Academic Integrity Policy.
 from animal import Animal
 from enclosure import Enclosure
 from staff import Staff
+from health_record import HealthRecord
 
 class Zoo:
     """
@@ -169,23 +170,116 @@ class Zoo:
 # ============================ Enclosure Management ===============================================
     # Methods for managing enclosures in the zoo
     def add_enclosure(self, enclosure: Enclosure) -> str:
-        """Add an enclosure to the zoo."""
-        pass
+        """
+        Adds an enclosure to the zoo.
+
+        Args:
+            enclosure (Enclosure): The enclosure to add to the zoo.
+
+        Raises:
+            TypeError: If enclosure is not an Enclosure instance.
+            ValueError: If enclosure is already in the zoo.
+
+        Returns:
+            str: Confirmation message after adding the enclosure.
+        """
+        # Validate that enclosure is an Enclosure instance
+        if not isinstance(enclosure, Enclosure):
+            raise TypeError('Only Enclosure objects can be added to the zoo.')
+
+        # Check for duplicate enclosures
+        if enclosure in self.__enclosures:
+            raise ValueError(f'{enclosure.environmental_type} enclosure is already in the zoo.')
+
+        # Add enclosure to zoo
+        self.__enclosures.append(enclosure)
+        return f'{enclosure.environmental_type} enclosure has been added to the zoo.'
 
     def remove_enclosure(self, enclosure: Enclosure) -> str:
-        """Remove an enclosure from the zoo."""
-        pass
+        """
+        Removes an enclosure from the zoo.
+
+        Args:
+            enclosure (Enclosure): The enclosure to remove from the zoo.
+
+        Raises:
+            TypeError: If enclosure is not an Enclosure instance.
+            ValueError: If enclosure is not in the zoo or still contains animals.
+
+        Returns:
+            str: Confirmation message after removing the enclosure.
+        """
+        # Validate that enclosure is an Enclosure instance
+        if not isinstance(enclosure, Enclosure):
+            raise TypeError('Only Enclosure objects can be removed from the zoo.')
+
+        # Check if enclosure exists in zoo
+        if enclosure not in self.__enclosures:
+            raise ValueError(f'{enclosure.environmental_type} enclosure is not in the zoo.')
+
+        # Check if enclosure still has animals
+        if len(enclosure.animals) > 0:
+            raise ValueError(f'Cannot remove enclosure: it still contains {len(enclosure.animals)} animal(s).')
+
+        # Remove enclosure from zoo
+        self.__enclosures.remove(enclosure)
+        return f'{enclosure.environmental_type} enclosure has been removed from the zoo.'
 
 # ============================ Staff Management ===================================================
     # Methods for managing staff members in the zoo
     def add_staff(self, staff_member: Staff) -> str:
-        """Add a staff member to the zoo."""
-        pass
+        """
+        Adds a staff member to the zoo.
+
+        Args:
+            staff_member (Staff): The staff member to add to the zoo.
+
+        Raises:
+            TypeError: If staff_member is not a Staff instance.
+            ValueError: If staff member is already in the zoo.
+
+        Returns:
+            str: Confirmation message after adding the staff member.
+        """
+        # Validate that staff_member is a Staff instance
+        if not isinstance(staff_member, Staff):
+            raise TypeError('Only Staff objects can be added to the zoo.')
+
+        # Check for duplicate staff (by staff_id using __eq__)
+        if staff_member in self.__staff:
+            raise ValueError(f'{staff_member.name} (ID: {staff_member.staff_id}) is already in the zoo.')
+
+        # Add staff member to zoo
+        self.__staff.append(staff_member)
+        return f'{staff_member.name} ({staff_member.role}) has been added to the zoo staff.'
 
     def remove_staff(self, staff_member: Staff) -> str:
-        """Remove a staff member from the zoo."""
-        pass
-# ============================ Animal-Enclosure Assignment ========================================
+        """
+        Removes a staff member from the zoo.
+
+        Args:
+            staff_member (Staff): The staff member to remove from the zoo.
+
+        Raises:
+            TypeError: If staff_member is not a Staff instance.
+            ValueError: If staff member is not in the zoo.
+
+        Returns:
+            str: Confirmation message after removing the staff member.
+        """
+        # Validate that staff_member is a Staff instance
+        if not isinstance(staff_member, Staff):
+            raise TypeError('Only Staff objects can be removed from the zoo.')
+
+        # Check if staff member exists in zoo
+        if staff_member not in self.__staff:
+            raise ValueError(f'{staff_member.name} is not in the zoo staff.')
+
+        # Remove staff member from zoo
+        self.__staff.remove(staff_member)
+        return f'{staff_member.name} ({staff_member.role}) has been removed from the zoo staff.'
+
+# ============================ Animal Enclosure Assignment ========================================
     # Methods for assigning animals to appropriate enclosures
     def assign_animal_to_enclosure(self, animal: Animal, enclosure: Enclosure) -> str:
         """Assigns an animal to an appropriate enclosure."""
