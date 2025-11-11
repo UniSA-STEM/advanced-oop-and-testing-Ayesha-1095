@@ -217,3 +217,210 @@ def test_zoo_initialization_invalid_name():
 
     with pytest.raises(ValueError):
         Zoo('   ')
+
+
+# ===============================================
+#        Animal Management Tests
+# ===============================================
+# Test adding, removing, and finding animals in the zoo
+
+# ============================ Add Animal Tests ===================================================
+# Test adding animals to the zoo with various scenarios
+
+def test_add_animal_valid(zoo, sample_lion):
+    """Test adding a valid animal to the zoo."""
+    msg = zoo.add_animal(sample_lion)
+
+    # Check confirmation message
+    assert 'Simba the Lion has been added to the zoo.' in msg
+
+    # Verify animal is in zoo
+    assert sample_lion in zoo.animals
+    assert len(zoo.animals) == 1
+
+
+def test_add_multiple_animals(zoo, sample_lion, sample_tiger, sample_parrot):
+    """Test adding multiple different animals to the zoo."""
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+    zoo.add_animal(sample_parrot)
+
+    # Verify all animals are in zoo
+    assert len(zoo.animals) == 3
+    assert sample_lion in zoo.animals
+    assert sample_tiger in zoo.animals
+    assert sample_parrot in zoo.animals
+
+
+def test_add_animal_confirms_correct_name(zoo, sample_tiger):
+    """Test that adding tiger Luna returns correct confirmation."""
+    msg = zoo.add_animal(sample_tiger)
+
+    # Check that Luna is mentioned in confirmation
+    assert 'Luna the Tiger has been added to the zoo.' in msg
+
+
+def test_add_animal_invalid_type(zoo):
+    """Test that adding a non-Animal object raises TypeError."""
+    # Type error: must be Animal instance
+    with pytest.raises(TypeError):
+        zoo.add_animal('not an animal')
+
+    with pytest.raises(TypeError):
+        zoo.add_animal(123)
+
+    with pytest.raises(TypeError):
+        zoo.add_animal(None)
+
+
+def test_add_duplicate_animal(zoo, sample_lion):
+    """Test that adding the same animal twice raises ValueError."""
+    # Add animal once
+    zoo.add_animal(sample_lion)
+
+    # Attempting to add again should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.add_animal(sample_lion)
+
+
+# ============================ Remove Animal Tests ================================================
+# Test removing animals from the zoo
+
+def test_remove_animal_valid(zoo, sample_lion):
+    """Test removing an animal from the zoo."""
+    # Add animal first
+    zoo.add_animal(sample_lion)
+
+    # Remove animal
+    msg = zoo.remove_animal(sample_lion)
+
+    # Check confirmation message
+    assert 'Simba the Lion has been removed from the zoo.' in msg
+
+    # Verify animal is not in zoo
+    assert sample_lion not in zoo.animals
+    assert len(zoo.animals) == 0
+
+
+def test_remove_animal_from_multiple(zoo, sample_lion, sample_tiger):
+    """Test removing one animal when multiple animals exist."""
+    # Add multiple animals
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+
+    # Remove one animal
+    zoo.remove_animal(sample_lion)
+
+    # Verify correct animal removed
+    assert sample_lion not in zoo.animals
+    assert sample_tiger in zoo.animals
+    assert len(zoo.animals) == 1
+
+
+def test_remove_animal_not_in_zoo(zoo, sample_lion):
+    """Test that removing an animal not in zoo raises ValueError."""
+    # Do not add animal
+
+    # Attempting to remove should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.remove_animal(sample_lion)
+
+
+def test_remove_animal_invalid_type(zoo):
+    """Test that removing a non-Animal object raises TypeError."""
+    # Type error: must be Animal instance
+    with pytest.raises(TypeError):
+        zoo.remove_animal('not an animal')
+
+    with pytest.raises(TypeError):
+        zoo.remove_animal(None)
+
+
+# ============================ Find Animal Tests ==================================================
+# Test finding animals by name
+
+def test_find_animal_by_name_valid(zoo, sample_lion):
+    """Test finding an animal by name."""
+    # Add animal first
+    zoo.add_animal(sample_lion)
+
+    # Find animal by name
+    found = zoo.find_animal_by_name('Simba')
+
+    # Verify correct animal found
+    assert found == sample_lion
+    assert found.name == 'Simba'
+    assert found.species == 'Lion'
+
+
+def test_find_animal_by_name_case_insensitive(zoo, sample_tiger):
+    """Test that finding animal by name is case-insensitive."""
+    # Add animal
+    zoo.add_animal(sample_tiger)
+
+    # Find with different cases
+    found1 = zoo.find_animal_by_name('luna')
+    found2 = zoo.find_animal_by_name('LUNA')
+    found3 = zoo.find_animal_by_name('LuNa')
+
+    # All should return the same animal
+    assert found1 == sample_tiger
+    assert found2 == sample_tiger
+    assert found3 == sample_tiger
+
+
+def test_find_animal_from_multiple(zoo, sample_lion, sample_tiger, sample_parrot):
+    """Test finding a specific animal when multiple animals exist."""
+    # Add multiple animals
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+    zoo.add_animal(sample_parrot)
+
+    # Find specific animals
+    found_lion = zoo.find_animal_by_name('Simba')
+    found_tiger = zoo.find_animal_by_name('Luna')
+    found_parrot = zoo.find_animal_by_name('Polly')
+
+    # Verify correct animals found
+    assert found_lion == sample_lion
+    assert found_tiger == sample_tiger
+    assert found_parrot == sample_parrot
+
+
+def test_find_animal_not_found(zoo, sample_lion):
+    """Test that finding a non-existent animal raises ValueError."""
+    # Add one animal
+    zoo.add_animal(sample_lion)
+
+    # Try to find non-existent animal
+    with pytest.raises(ValueError):
+        zoo.find_animal_by_name('NonExistent')
+
+
+def test_find_animal_empty_zoo(zoo):
+    """Test that finding animal in empty zoo raises ValueError."""
+    # Do not add any animals
+
+    # Try to find animal
+    with pytest.raises(ValueError):
+        zoo.find_animal_by_name('Simba')
+
+
+def test_find_animal_invalid_name_type(zoo):
+    """Test that finding with invalid name type raises TypeError."""
+    # Type error: name must be a string
+    with pytest.raises(TypeError):
+        zoo.find_animal_by_name(123)
+
+    with pytest.raises(TypeError):
+        zoo.find_animal_by_name(None)
+
+
+def test_find_animal_empty_name(zoo):
+    """Test that finding with empty name raises ValueError."""
+    # Value error: name cannot be empty
+    with pytest.raises(ValueError):
+        zoo.find_animal_by_name('')
+
+    with pytest.raises(ValueError):
+        zoo.find_animal_by_name('   ')
