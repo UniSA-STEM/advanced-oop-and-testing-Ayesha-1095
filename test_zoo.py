@@ -424,3 +424,280 @@ def test_find_animal_empty_name(zoo):
 
     with pytest.raises(ValueError):
         zoo.find_animal_by_name('   ')
+
+
+# ===============================================
+#        Enclosure Management Tests
+# ===============================================
+# Test adding and removing enclosures in the zoo
+
+# ============================ Add Enclosure Tests ================================================
+# Test adding enclosures to the zoo
+
+def test_add_enclosure_valid(zoo, sample_enclosure):
+    """Test adding a valid enclosure to the zoo."""
+    msg = zoo.add_enclosure(sample_enclosure)
+
+    # Check confirmation message
+    assert 'Savannah enclosure has been added to the zoo.' in msg
+
+    # Verify enclosure is in zoo
+    assert sample_enclosure in zoo.enclosures
+    assert len(zoo.enclosures) == 1
+
+
+def test_add_multiple_enclosures(zoo):
+    """Test adding multiple different enclosures to the zoo."""
+    enc1 = Enclosure('Large', 'Savannah', Mammal, 80)
+    enc2 = Enclosure('Medium', 'Tropical', Bird, 90)
+    enc3 = Enclosure('Small', 'Rainforest', Bird, 95)
+
+    zoo.add_enclosure(enc1)
+    zoo.add_enclosure(enc2)
+    zoo.add_enclosure(enc3)
+
+    # Verify all enclosures are in zoo
+    assert len(zoo.enclosures) == 3
+    assert enc1 in zoo.enclosures
+    assert enc2 in zoo.enclosures
+    assert enc3 in zoo.enclosures
+
+
+def test_add_enclosure_invalid_type(zoo):
+    """Test that adding a non-Enclosure object raises TypeError."""
+    # Type error: must be Enclosure instance
+    with pytest.raises(TypeError):
+        zoo.add_enclosure('not an enclosure')
+
+    with pytest.raises(TypeError):
+        zoo.add_enclosure(123)
+
+    with pytest.raises(TypeError):
+        zoo.add_enclosure(None)
+
+
+def test_add_duplicate_enclosure(zoo, sample_enclosure):
+    """Test that adding the same enclosure twice raises ValueError."""
+    # Add enclosure once
+    zoo.add_enclosure(sample_enclosure)
+
+    # Attempting to add again should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.add_enclosure(sample_enclosure)
+
+
+# ============================ Remove Enclosure Tests =============================================
+# Test removing enclosures from the zoo
+
+def test_remove_enclosure_valid(zoo, sample_enclosure):
+    """Test removing an enclosure from the zoo."""
+    # Add enclosure first
+    zoo.add_enclosure(sample_enclosure)
+
+    # Remove enclosure
+    msg = zoo.remove_enclosure(sample_enclosure)
+
+    # Check confirmation message
+    assert 'Savannah enclosure has been removed from the zoo.' in msg
+
+    # Verify enclosure is not in zoo
+    assert sample_enclosure not in zoo.enclosures
+    assert len(zoo.enclosures) == 0
+
+
+def test_remove_enclosure_from_multiple(zoo):
+    """Test removing one enclosure when multiple enclosures exist."""
+    enc1 = Enclosure('Large', 'Savannah', Mammal, 80)
+    enc2 = Enclosure('Medium', 'Tropical', Bird, 90)
+
+    # Add multiple enclosures
+    zoo.add_enclosure(enc1)
+    zoo.add_enclosure(enc2)
+
+    # Remove one enclosure
+    zoo.remove_enclosure(enc1)
+
+    # Verify correct enclosure removed
+    assert enc1 not in zoo.enclosures
+    assert enc2 in zoo.enclosures
+    assert len(zoo.enclosures) == 1
+
+
+def test_remove_enclosure_not_in_zoo(zoo, sample_enclosure):
+    """Test that removing an enclosure not in zoo raises ValueError."""
+    # Do not add enclosure
+
+    # Attempting to remove should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.remove_enclosure(sample_enclosure)
+
+
+def test_remove_enclosure_with_animals(zoo, sample_enclosure, sample_lion):
+    """Test that removing an enclosure with animals raises ValueError."""
+    # Add enclosure
+    zoo.add_enclosure(sample_enclosure)
+
+    # Add animal to enclosure
+    sample_enclosure.add_animal(sample_lion)
+
+    # Attempting to remove enclosure with animals should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.remove_enclosure(sample_enclosure)
+
+
+def test_remove_enclosure_after_removing_animals(zoo, sample_enclosure, sample_lion):
+    """Test that enclosure can be removed after all animals are removed."""
+    # Add enclosure and animal
+    zoo.add_enclosure(sample_enclosure)
+    sample_enclosure.add_animal(sample_lion)
+
+    # Remove animal from enclosure
+    sample_enclosure.remove_animal(sample_lion)
+
+    # Now removing enclosure should succeed
+    msg = zoo.remove_enclosure(sample_enclosure)
+    assert 'Savannah enclosure has been removed from the zoo.' in msg
+    assert sample_enclosure not in zoo.enclosures
+
+
+def test_remove_enclosure_invalid_type(zoo):
+    """Test that removing a non-Enclosure object raises TypeError."""
+    # Type error: must be Enclosure instance
+    with pytest.raises(TypeError):
+        zoo.remove_enclosure('not an enclosure')
+
+    with pytest.raises(TypeError):
+        zoo.remove_enclosure(None)
+
+
+# ===============================================
+#        Staff Management Tests
+# ===============================================
+# Test adding and removing staff members in the zoo
+
+# ============================ Add Staff Tests ====================================================
+# Test adding staff members to the zoo
+
+def test_add_staff_zookeeper(zoo, sample_zookeeper):
+    """Test adding a zookeeper to the zoo."""
+    msg = zoo.add_staff(sample_zookeeper)
+
+    # Check confirmation message
+    assert 'John (Zookeeper) has been added to the zoo staff.' in msg
+
+    # Verify staff member is in zoo
+    assert sample_zookeeper in zoo.staff
+    assert len(zoo.staff) == 1
+
+
+def test_add_staff_veterinarian(zoo, sample_vet):
+    """Test adding a veterinarian to the zoo."""
+    msg = zoo.add_staff(sample_vet)
+
+    # Check confirmation message
+    assert 'Dr. Smith (Veterinarian) has been added to the zoo staff.' in msg
+
+    # Verify staff member is in zoo
+    assert sample_vet in zoo.staff
+    assert len(zoo.staff) == 1
+
+
+def test_add_multiple_staff(zoo, sample_zookeeper, sample_vet):
+    """Test adding multiple staff members to the zoo."""
+    zoo.add_staff(sample_zookeeper)
+    zoo.add_staff(sample_vet)
+
+    # Verify both staff members are in zoo
+    assert len(zoo.staff) == 2
+    assert sample_zookeeper in zoo.staff
+    assert sample_vet in zoo.staff
+
+
+def test_add_staff_invalid_type(zoo):
+    """Test that adding a non-Staff object raises TypeError."""
+    # Type error: must be Staff instance
+    with pytest.raises(TypeError):
+        zoo.add_staff('not a staff member')
+
+    with pytest.raises(TypeError):
+        zoo.add_staff(123)
+
+    with pytest.raises(TypeError):
+        zoo.add_staff(None)
+
+
+def test_add_duplicate_staff(zoo, sample_zookeeper):
+    """Test that adding the same staff member twice raises ValueError."""
+    # Add staff member once
+    zoo.add_staff(sample_zookeeper)
+
+    # Attempting to add again should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.add_staff(sample_zookeeper)
+
+
+def test_add_staff_duplicate_by_id(zoo):
+    """Test that adding staff with same ID raises ValueError."""
+    keeper1 = Zookeeper('John', 101)
+    keeper2 = Zookeeper('Jane', 101)  # Same ID, different name
+
+    # Add first staff member
+    zoo.add_staff(keeper1)
+
+    # Attempting to add staff with same ID should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.add_staff(keeper2)
+
+
+# ============================ Remove Staff Tests =================================================
+# Test removing staff members from the zoo
+
+def test_remove_staff_valid(zoo, sample_zookeeper):
+    """Test removing a staff member from the zoo."""
+    # Add staff member first
+    zoo.add_staff(sample_zookeeper)
+
+    # Remove staff member
+    msg = zoo.remove_staff(sample_zookeeper)
+
+    # Check confirmation message
+    assert 'John (Zookeeper) has been removed from the zoo staff.' in msg
+
+    # Verify staff member is not in zoo
+    assert sample_zookeeper not in zoo.staff
+    assert len(zoo.staff) == 0
+
+
+def test_remove_staff_from_multiple(zoo, sample_zookeeper, sample_vet):
+    """Test removing one staff member when multiple staff exist."""
+    # Add multiple staff members
+    zoo.add_staff(sample_zookeeper)
+    zoo.add_staff(sample_vet)
+
+    # Remove one staff member
+    zoo.remove_staff(sample_zookeeper)
+
+    # Verify correct staff member removed
+    assert sample_zookeeper not in zoo.staff
+    assert sample_vet in zoo.staff
+    assert len(zoo.staff) == 1
+
+
+def test_remove_staff_not_in_zoo(zoo, sample_zookeeper):
+    """Test that removing a staff member not in zoo raises ValueError."""
+    # Do not add staff member
+
+    # Attempting to remove should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.remove_staff(sample_zookeeper)
+
+
+def test_remove_staff_invalid_type(zoo):
+    """Test that removing a non-Staff object raises TypeError."""
+    # Type error: must be Staff instance
+    with pytest.raises(TypeError):
+        zoo.remove_staff('not a staff member')
+
+    with pytest.raises(TypeError):
+        zoo.remove_staff(None)
+
