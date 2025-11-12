@@ -11,6 +11,7 @@ from zoo import Zoo
 from animal import Mammal, Bird
 from enclosure import Enclosure
 from staff import Zookeeper, Veterinarian
+from health_record import HealthRecord
 
 
 # ============================ Fixtures ===============================================================
@@ -700,4 +701,403 @@ def test_remove_staff_invalid_type(zoo):
 
     with pytest.raises(TypeError):
         zoo.remove_staff(None)
+
+# ===============================================
+#        Animal Enclosure Assignment Tests
+# ===============================================
+# Test assigning animals to enclosures
+
+# ============================ Assign Animal to Enclosure Tests ===================================
+# Test the assignment of animals to appropriate enclosures
+
+def test_assign_animal_to_enclosure_valid(zoo, sample_lion, sample_enclosure):
+    """Test assigning an animal to an enclosure."""
+    # Add animal and enclosure to zoo first
+    zoo.add_animal(sample_lion)
+    zoo.add_enclosure(sample_enclosure)
+
+    # Assign animal to enclosure
+    msg = zoo.assign_animal_to_enclosure(sample_lion, sample_enclosure)
+
+    # Check confirmation message
+    assert 'Simba assigned to Savannah enclosure' in msg
+    assert 'has been added to the enclosure' in msg
+
+    # Verify animal is in enclosure
+    assert sample_lion in sample_enclosure.animals
+
+
+def test_assign_multiple_animals_to_enclosure(zoo, sample_lion, sample_tiger, sample_enclosure):
+    """Test assigning multiple animals to the same enclosure."""
+    # Add animals and enclosure to zoo
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+    zoo.add_enclosure(sample_enclosure)
+
+    # Assign both animals
+    zoo.assign_animal_to_enclosure(sample_lion, sample_enclosure)
+    zoo.assign_animal_to_enclosure(sample_tiger, sample_enclosure)
+
+    # Verify both animals are in enclosure
+    assert len(sample_enclosure.animals) == 2
+    assert sample_lion in sample_enclosure.animals
+    assert sample_tiger in sample_enclosure.animals
+
+
+def test_assign_animal_not_in_zoo(zoo, sample_lion, sample_enclosure):
+    """Test that assigning an animal not in zoo raises ValueError."""
+    # Add only enclosure, not animal
+    zoo.add_enclosure(sample_enclosure)
+
+    # Attempting to assign should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.assign_animal_to_enclosure(sample_lion, sample_enclosure)
+
+
+def test_assign_animal_enclosure_not_in_zoo(zoo, sample_lion, sample_enclosure):
+    """Test that assigning to an enclosure not in zoo raises ValueError."""
+    # Add only animal, not enclosure
+    zoo.add_animal(sample_lion)
+
+    # Attempting to assign should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.assign_animal_to_enclosure(sample_lion, sample_enclosure)
+
+
+def test_assign_animal_wrong_type(zoo, sample_parrot, sample_enclosure):
+    """Test that assigning wrong animal type to enclosure raises TypeError."""
+    # Add bird and mammal enclosure
+    zoo.add_animal(sample_parrot)
+    zoo.add_enclosure(sample_enclosure)  # Mammal enclosure
+
+    # Attempting to assign bird to mammal enclosure should raise TypeError
+    with pytest.raises(TypeError):
+        zoo.assign_animal_to_enclosure(sample_parrot, sample_enclosure)
+
+
+def test_assign_animal_wrong_environment(zoo, sample_enclosure):
+    """Test that assigning animal with wrong environment raises ValueError."""
+    # Create animal with different environment
+    jungle_lion = Mammal('Leo', 'Lion', 5, 'Carnivore', 'Jungle', 'Roar', 'Golden', 'Warm-blooded')
+
+    # Add animal and savannah enclosure
+    zoo.add_animal(jungle_lion)
+    zoo.add_enclosure(sample_enclosure)  # Savannah enclosure
+
+    # Attempting to assign jungle animal to savannah enclosure should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.assign_animal_to_enclosure(jungle_lion, sample_enclosure)
+
+
+def test_assign_animal_with_critical_health(zoo, sample_lion, sample_enclosure):
+    """Test that assigning animal with critical health issues raises ValueError."""
+
+    # Add animal and enclosure
+    zoo.add_animal(sample_lion)
+    zoo.add_enclosure(sample_enclosure)
+
+    # Add critical health record to animal
+    critical_record = HealthRecord('Severe injury', '2025-11-10', 'critical', 'Immediate care')
+    sample_lion.add_health_record(critical_record)
+
+    # Attempting to assign should raise ValueError
+    with pytest.raises(ValueError):
+        zoo.assign_animal_to_enclosure(sample_lion, sample_enclosure)
+
+
+def test_assign_animal_invalid_animal_type(zoo, sample_enclosure):
+    """Test that assigning with invalid animal type raises TypeError."""
+    # Add enclosure
+    zoo.add_enclosure(sample_enclosure)
+
+    # Type error: animal must be Animal instance
+    with pytest.raises(TypeError):
+        zoo.assign_animal_to_enclosure('not an animal', sample_enclosure)
+
+
+def test_assign_animal_invalid_enclosure_type(zoo, sample_lion):
+    """Test that assigning with invalid enclosure type raises TypeError."""
+    # Add animal
+    zoo.add_animal(sample_lion)
+
+    # Type error: enclosure must be Enclosure instance
+    with pytest.raises(TypeError):
+        zoo.assign_animal_to_enclosure(sample_lion, 'not an enclosure')
+
+
+# ===============================================
+#        Reporting and Display Tests
+# ===============================================
+# Test report generation and filtering methods
+
+# ============================ Generate Report Tests ==============================================
+# Test the comprehensive zoo report generation
+
+def test_generate_report_empty_zoo(zoo):
+    """Test generating report for empty zoo."""
+    report = zoo.generate_report()
+
+    # Check report contains zoo name
+    assert 'Taronga Zoo - Zoo Report' in report
+
+    # Check sections indicate empty zoo
+    assert 'No animals in the zoo.' in report
+    assert 'No enclosures in the zoo.' in report
+    assert 'No staff members in the zoo.' in report
+
+
+def test_generate_report_with_animals(zoo, sample_lion, sample_tiger):
+    """Test generating report with animals."""
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+
+    report = zoo.generate_report()
+
+    # Check animals section
+    assert 'ANIMALS (2)' in report
+    assert 'Simba (Lion)' in report
+    assert 'Luna (Tiger)' in report
+
+
+def test_generate_report_with_enclosures(zoo, sample_enclosure):
+    """Test generating report with enclosures."""
+    zoo.add_enclosure(sample_enclosure)
+
+    report = zoo.generate_report()
+
+    # Check enclosures section
+    assert 'ENCLOSURES (1)' in report
+    assert 'Savannah' in report
+    assert 'Mammal' in report
+
+
+def test_generate_report_with_staff(zoo, sample_zookeeper, sample_vet):
+    """Test generating report with staff."""
+    zoo.add_staff(sample_zookeeper)
+    zoo.add_staff(sample_vet)
+
+    report = zoo.generate_report()
+
+    # Check staff section
+    assert 'STAFF (2)' in report
+    assert 'John' in report
+    assert 'Zookeeper' in report
+    assert 'Dr. Smith' in report
+    assert 'Veterinarian' in report
+
+
+def test_generate_report_comprehensive(zoo, sample_lion, sample_tiger, sample_enclosure, sample_zookeeper):
+    """Test generating comprehensive report with all entities."""
+    # Add all entities
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+    zoo.add_enclosure(sample_enclosure)
+    zoo.add_staff(sample_zookeeper)
+
+    # Assign animal and staff
+    zoo.assign_animal_to_enclosure(sample_lion, sample_enclosure)
+    sample_zookeeper.assign_animal(sample_lion)
+
+    report = zoo.generate_report()
+
+    # Check all sections present
+    assert 'ANIMALS (2)' in report
+    assert 'ENCLOSURES (1)' in report
+    assert 'STAFF (1)' in report
+    assert 'Simba' in report
+    assert 'Luna' in report
+    assert 'Savannah' in report
+    assert 'John' in report
+
+
+def test_generate_report_with_critical_health(zoo, sample_lion):
+    """Test that report shows critical health warning."""
+
+    # Add animal
+    zoo.add_animal(sample_lion)
+
+    # Add critical health record
+    critical_record = HealthRecord('Emergency', '2025-11-10', 'critical', 'Urgent care')
+    sample_lion.add_health_record(critical_record)
+
+    report = zoo.generate_report()
+
+    # Check critical health warning appears
+    assert 'CRITICAL HEALTH ISSUES' in report
+
+
+# ============================ List Critical Health Tests =========================================
+# Test filtering animals with critical health issues
+
+def test_list_critical_health_empty(zoo):
+    """Test listing critical health animals when none exist."""
+    critical = zoo.list_animals_with_critical_health()
+
+    # Should return empty list
+    assert isinstance(critical, list)
+    assert len(critical) == 0
+
+
+def test_list_critical_health_no_critical(zoo, sample_lion, sample_tiger):
+    """Test listing when animals have no critical health issues."""
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+
+    critical = zoo.list_animals_with_critical_health()
+
+    # Should return empty list
+    assert len(critical) == 0
+
+
+def test_list_critical_health_one_critical(zoo, sample_lion, sample_tiger):
+    """Test listing when one animal has critical health issues."""
+    from health_record import HealthRecord
+
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+
+    # Add critical health record to one animal
+    critical_record = HealthRecord('Serious injury', '2025-11-10', 'high', 'Treatment needed')
+    sample_lion.add_health_record(critical_record)
+
+    critical = zoo.list_animals_with_critical_health()
+
+    # Should return only lion
+    assert len(critical) == 1
+    assert sample_lion in critical
+    assert sample_tiger not in critical
+
+
+def test_list_critical_health_multiple_critical(zoo, sample_lion, sample_tiger):
+    """Test listing when multiple animals have critical health issues."""
+    from health_record import HealthRecord
+
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+
+    # Add critical health records to both
+    record1 = HealthRecord('Injury', '2025-11-10', 'critical', 'Urgent')
+    record2 = HealthRecord('Illness', '2025-11-10', 'high', 'Care needed')
+    sample_lion.add_health_record(record1)
+    sample_tiger.add_health_record(record2)
+
+    critical = zoo.list_animals_with_critical_health()
+
+    # Should return both animals
+    assert len(critical) == 2
+    assert sample_lion in critical
+    assert sample_tiger in critical
+
+
+# ============================ List Animals By Species Tests ======================================
+# Test filtering animals by species
+
+def test_list_by_species_valid(zoo, sample_lion, sample_tiger):
+    """Test listing animals by species."""
+    zoo.add_animal(sample_lion)
+    zoo.add_animal(sample_tiger)
+
+    # List lions
+    lions = zoo.list_animals_by_species('Lion')
+
+    # Should return only lion
+    assert len(lions) == 1
+    assert sample_lion in lions
+
+
+def test_list_by_species_case_insensitive(zoo, sample_lion):
+    """Test that species filtering is case-insensitive."""
+    zoo.add_animal(sample_lion)
+
+    # Try different cases
+    lions1 = zoo.list_animals_by_species('lion')
+    lions2 = zoo.list_animals_by_species('LION')
+    lions3 = zoo.list_animals_by_species('LiOn')
+
+    # All should return the same result
+    assert len(lions1) == 1
+    assert len(lions2) == 1
+    assert len(lions3) == 1
+
+
+def test_list_by_species_multiple(zoo):
+    """Test listing when multiple animals of same species exist."""
+    lion1 = Mammal('Simba', 'Lion', 5, 'Carnivore', 'Savannah', 'Roar', 'Golden', 'Warm-blooded')
+    lion2 = Mammal('Nala', 'Lion', 4, 'Carnivore', 'Savannah', 'Roar', 'Tan', 'Warm-blooded')
+    tiger = Mammal('Luna', 'Tiger', 4, 'Carnivore', 'Savannah', 'Growl', 'Striped', 'Warm-blooded')
+
+    zoo.add_animal(lion1)
+    zoo.add_animal(lion2)
+    zoo.add_animal(tiger)
+
+    # List lions
+    lions = zoo.list_animals_by_species('Lion')
+
+    # Should return both lions
+    assert len(lions) == 2
+    assert lion1 in lions
+    assert lion2 in lions
+    assert tiger not in lions
+
+
+def test_list_by_species_not_found(zoo, sample_lion):
+    """Test listing species that doesn't exist."""
+    zoo.add_animal(sample_lion)
+
+    # List non-existent species
+    elephants = zoo.list_animals_by_species('Elephant')
+
+    # Should return empty list
+    assert len(elephants) == 0
+
+
+def test_list_by_species_empty_zoo(zoo):
+    """Test listing species in empty zoo."""
+    # List any species
+    lions = zoo.list_animals_by_species('Lion')
+
+    # Should return empty list
+    assert len(lions) == 0
+
+
+def test_list_by_species_invalid_type(zoo):
+    """Test that invalid species type raises TypeError."""
+    # Type error: species must be a string
+    with pytest.raises(TypeError):
+        zoo.list_animals_by_species(123)
+
+    with pytest.raises(TypeError):
+        zoo.list_animals_by_species(None)
+
+
+def test_list_by_species_empty_string(zoo):
+    """Test that empty species string raises ValueError."""
+    # Value error: species cannot be empty
+    with pytest.raises(ValueError):
+        zoo.list_animals_by_species('')
+
+    with pytest.raises(ValueError):
+        zoo.list_animals_by_species('   ')
+
+
+# ============================ String Method Test =================================================
+# Test __str__ method
+
+def test_str_method_calls_generate_report(zoo):
+    """Test that __str__ returns the same as generate_report."""
+    assert str(zoo) == zoo.generate_report()
+
+
+def test_str_method_with_entities(zoo, sample_lion, sample_enclosure):
+    """Test __str__ with zoo entities."""
+    zoo.add_animal(sample_lion)
+    zoo.add_enclosure(sample_enclosure)
+
+    zoo_str = str(zoo)
+
+    # Should contain same content as report
+    assert 'Taronga Zoo - Zoo Report' in zoo_str
+    assert 'Simba' in zoo_str
+    assert 'Savannah' in zoo_str
+
 
