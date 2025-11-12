@@ -9,7 +9,6 @@ This is my own work as defined by the University's Academic Integrity Policy.
 from animal import Animal
 from enclosure import Enclosure
 from staff import Staff
-from health_record import HealthRecord
 
 class Zoo:
     """
@@ -282,23 +281,152 @@ class Zoo:
 # ============================ Animal Enclosure Assignment ========================================
     # Methods for assigning animals to appropriate enclosures
     def assign_animal_to_enclosure(self, animal: Animal, enclosure: Enclosure) -> str:
-        """Assigns an animal to an appropriate enclosure."""
-        pass
+        """
+        Assigns an animal to an appropriate enclosure.
 
-# ============================ Reporting ==========================================================
+        This method ensures that:
+        - The animal is in the zoo
+        - The enclosure is in the zoo
+        - The animal matches the enclosure type
+        - The animal's environment matches the enclosure
+
+        Args:
+            animal (Animal): The animal to assign.
+            enclosure (Enclosure): The enclosure to assign the animal to.
+
+        Raises:
+            TypeError: If animal or enclosure are not the correct type.
+            ValueError: If animal or enclosure are not in the zoo, or assignment fails.
+
+        Returns:
+            str: Confirmation message after assignment.
+        """
+        # Validate types
+        if not isinstance(animal, Animal):
+            raise TypeError('animal must be an Animal instance.')
+        if not isinstance(enclosure, Enclosure):
+            raise TypeError('enclosure must be an Enclosure instance.')
+
+        # Check if animal is in zoo
+        if animal not in self.__animals:
+            raise ValueError(f'{animal.name} is not in the zoo. Add the animal first.')
+
+        # Check if enclosure is in zoo
+        if enclosure not in self.__enclosures:
+            raise ValueError(f'{enclosure.environmental_type} enclosure is not in the zoo. Add the enclosure first.')
+
+        # Check if animal can be moved (no critical health issues)
+        if not animal.can_be_moved():
+            raise ValueError(f'{animal.name} has critical health issues and cannot be moved.')
+
+        # Attempt to add animal to enclosure (enclosure validates type and environment)
+        result = enclosure.add_animal(animal)
+
+        # Return confirmation
+        return f'{animal.name} assigned to {enclosure.environmental_type} enclosure. {result}'
+
+    # ============================ Reporting ==========================================================
     # Methods for generating reports about the zoo
     def generate_report(self) -> str:
-        """Generates a report of the zoo."""
-        pass
+        """
+        Generates a comprehensive summary of the zoo including
+        animals, enclosures, and staff.
+
+        Returns:
+            str: A detailed report of the zoo's current state.
+        """
+        # Build report header
+        report = f'{"=" * 60}\n'
+        report += f'{self.name} - Zoo Report\n'
+        report += f'{"=" * 60}\n\n'
+
+        # Animals section
+        report += f'ANIMALS ({len(self.__animals)}):\n'
+        report += '-' * 60 + '\n'
+        if self.__animals:
+            for animal in self.__animals:
+                report += f'  - {animal.name} ({animal.species}), Age: {animal.age}, '
+                report += f'Diet: {animal.dietary_needs}, Environment: {animal.environment}\n'
+                # Check for critical health issues
+                if animal.has_critical_health_issues():
+                    report += f'    !!  CRITICAL HEALTH ISSUES - Cannot be moved\n'
+        else:
+            report += '  No animals in the zoo.\n'
+        report += '\n'
+
+        # Enclosures section
+        report += f'ENCLOSURES ({len(self.__enclosures)}):\n'
+        report += '-' * 60 + '\n'
+        if self.__enclosures:
+            for enclosure in self.__enclosures:
+                report += f'  - {enclosure.environmental_type} ({enclosure.size}), '
+                report += f'Type: {enclosure.animal_type.__name__}, '
+                report += f'Cleanliness: {enclosure.cleanliness_level}%, '
+                report += f'Animals: {len(enclosure.animals)}\n'
+        else:
+            report += '  No enclosures in the zoo.\n'
+        report += '\n'
+
+        # Staff section
+        report += f'STAFF ({len(self.__staff)}):\n'
+        report += '-' * 60 + '\n'
+        if self.__staff:
+            for staff_member in self.__staff:
+                report += f'  - {staff_member.name} (ID: {staff_member.staff_id}), '
+                report += f'Role: {staff_member.role}, '
+                report += f'Animals: {len(staff_member.assigned_animals)}, '
+                report += f'Enclosures: {len(staff_member.assigned_enclosures)}\n'
+        else:
+            report += '  No staff members in the zoo.\n'
+
+        report += '\n' + '=' * 60 + '\n'
+        return report
 
     def list_animals_with_critical_health(self) -> list:
-        """Return a list of the animals critical health."""
+        """
+        Returns a list of animals with critical health issues.
+
+        Returns:
+            list: List of Animal objects with critical health issues.
+        """
+        # Filter animals with critical health issues
+        critical_animals = [animal for animal in self.__animals if animal.has_critical_health_issues()]
+        return critical_animals
 
     def list_animals_by_species(self, species: str) -> list:
-        """Returns a list of animals of a specific species."""
-        pass
+        """
+        Returns a list of animals of a specific species.
 
-# ============================ String Method ======================================================
+        Args:
+            species (str): The species to filter by.
+
+        Raises:
+            TypeError: If species is not a string.
+            ValueError: If species is empty.
+
+        Returns:
+            list: List of Animal objects of the specified species.
+        """
+        # Validate species type
+        if not isinstance(species, str):
+            raise TypeError('Species must be a string.')
+
+        # Validate species not empty
+        if species.strip() == '':
+            raise ValueError('Species cannot be empty.')
+
+        # Filter animals by species (case-insensitive)
+        animals_by_species = [animal for animal in self.__animals
+                              if animal.species.lower() == species.lower()]
+        return animals_by_species
+
+    # ============================ String Method ======================================================
     def __str__(self) -> str:
-        """Return a string representation of the zoo."""
-        pass
+        """
+        Return a string representation of the zoo.
+
+        Returns:
+            str: The result of generate_report().
+        """
+        # Return comprehensive zoo report
+        return self.generate_report()
