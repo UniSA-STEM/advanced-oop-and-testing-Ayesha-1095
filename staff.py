@@ -145,7 +145,7 @@ class Staff(ABC):
 
         # Assign the animal
         self._assigned_animals.append(animal)
-        return f'{animal.name} the {animal.species} has been assigned.'
+        return f'{animal.name} the {animal.species} has been assigned to {self.name}.'
 
     def assign_enclosure(self, enclosure: Enclosure) -> str:
         """
@@ -175,7 +175,7 @@ class Staff(ABC):
 
         # Assign the enclosure
         self._assigned_enclosures.append(enclosure)
-        return f'{enclosure.environmental_type} enclosure has been assigned.'
+        return f'{enclosure.environmental_type} enclosure has been assigned to {self.name}.'
 
 # ================================ Abstract Method ===============================================
     # This method must be implemented by all subclasses
@@ -295,7 +295,7 @@ class Zookeeper(Staff):
         cleaning_result = enclosure.clean_enclosure()
 
         # Return a message confirming the cleaning action
-        return f'{self.name} ({self.role}) cleaned the {enclosure.environmental_type} enclosure {cleaning_result}.'
+        return f'{self.name} ({self.role}) cleaned the {enclosure.environmental_type} enclosure. {cleaning_result}'
 
     def perform_duties(self) -> str:
         """
