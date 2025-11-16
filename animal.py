@@ -12,7 +12,6 @@ from abc import ABC, abstractmethod
 
 from health_record import HealthRecord
 
-
 class Animal(ABC):
     """
     Abstract base class representing a general animal in the zoo.
